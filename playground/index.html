@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Doc Stream Renderer - Playground</title>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background: #f5f7fa;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .landing {
+        text-align: center;
+        padding: 40px 20px;
+        max-width: 720px;
+      }
+      .landing h1 {
+        font-size: 36px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 12px;
+      }
+      .landing p {
+        color: #666;
+        font-size: 16px;
+        margin-bottom: 40px;
+      }
+      .cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 20px;
+      }
+      .card {
+        background: #fff;
+        border-radius: 16px;
+        padding: 28px;
+        text-decoration: none;
+        color: #333;
+        border: 2px solid transparent;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+      }
+      .card:hover {
+        transform: translateY(-4px);
+        border-color: #667eea;
+        box-shadow: 0 12px 32px rgba(102,126,234,0.18);
+      }
+      .card-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        margin: 0 auto 16px;
+      }
+      .card-react .card-icon { background: #e6f7ff; }
+      .card-vue .card-icon { background: #f6ffed; }
+      .card h3 { font-size: 18px; margin-bottom: 8px; }
+      .card span { font-size: 13px; color: #888; }
+      .badge {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        margin-left: 6px;
+        font-weight: 500;
+      }
+      .badge-react { background: #e6f7ff; color: #1890ff; }
+      .badge-vue { background: #f6ffed; color: #52c41a; }
+    </style>
+  </head>
+  <body>
+    <div class="landing">
+      <h1>Doc Stream Renderer</h1>
+      <p>流式 Word 文档预览组件示例演示</p>
+      <div class="cards">
+        <a class="card card-react" href="./react.html">
+          <div class="card-icon">⚛️</div>
+          <h3>React 演示 <span class="badge badge-react">React 18</span></h3>
+          <span>查看 React 版本的 WordStreamPreview 组件用法与流式效果</span>
+        </a>
+        <a class="card card-vue" href="./vue.html">
+          <div class="card-icon">🌿</div>
+          <h3>Vue 3 演示 <span class="badge badge-vue">Vue 3</span></h3>
+          <span>查看 Vue 3 版本的 WordStreamPreview 组件用法与流式效果</span>
+        </a>
+      </div>
+    </div>
+  </body>
+</html>
