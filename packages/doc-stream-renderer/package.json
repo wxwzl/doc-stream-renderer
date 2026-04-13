@@ -1,8 +1,9 @@
 {
   "name": "doc-stream-renderer",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "A streaming Word document preview component for React and Vue 3",
   "author": "wxwzl",
+  "license": "MIT",
   "type": "module",
   "files": [
     "dist",
