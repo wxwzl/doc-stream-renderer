@@ -48,8 +48,8 @@
       </section>
 
       <section class="demo-section">
-        <h2>预览效果 (使用 WordStreamPreview 组件)</h2>
-        <WordStreamPreview :stream="stream" />
+        <h2>预览效果 (使用 DocStreamRenderer 组件)</h2>
+        <DocStreamRenderer :stream="stream" />
       </section>
     </main>
   </div>
@@ -57,7 +57,7 @@
 
 <script setup lang="ts">
   import { ref, onUnmounted } from 'vue';
-  import { WordStreamPreview, generateDocxBlob } from 'doc-stream-renderer/vue';
+  import { DocStreamRenderer, generateDocxBlob } from 'doc-stream-renderer/vue';
   import { examples } from '../examples';
 
   const stream = ref(examples.basic.data);

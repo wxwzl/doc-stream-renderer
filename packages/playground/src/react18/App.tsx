@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { WordStreamPreview, generateDocxBlob } from 'doc-stream-renderer/react';
+import { DocStreamRenderer, generateDocxBlob } from 'doc-stream-renderer/react';
 import { examples } from '../examples';
 
 export default function App() {
@@ -118,8 +118,8 @@ export default function App() {
         </section>
 
         <section className="demo-section">
-          <h2>预览效果 (使用 WordStreamPreview 组件)</h2>
-          <WordStreamPreview stream={stream} />
+          <h2>预览效果 (使用 DocStreamRenderer 组件)</h2>
+          <DocStreamRenderer stream={stream} />
         </section>
       </main>
     </div>
