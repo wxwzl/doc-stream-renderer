@@ -1,4 +1,8 @@
-## 1.0.1 (2026-04-13)
+## 1.0.3 (2026-04-13)
+
+### Bug Fixes
+
+- 统一渲染和下载解析行为 ([276ef4b](https://github.com/wxwzl/doc-stream-renderer/commit/276ef4b8527867c3d465b173d51cdf3b9a7f43c9))
 
 ### Features
 

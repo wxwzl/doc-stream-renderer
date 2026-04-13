@@ -16,6 +16,7 @@ export default {
         'ci', // CI/CD
         'chore', // 构建过程或辅助工具的变动
         'revert', // 回滚
+        'release', // 发布
       ],
     ],
     'subject-full-stop': [0, 'never'],
