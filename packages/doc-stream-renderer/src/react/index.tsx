@@ -22,23 +22,5 @@ export const DocStreamRenderer: React.FC<{
     shadow.innerHTML = htmlContent;
   }, [htmlContent]);
 
-  return (
-    <div
-      className={className}
-      style={{ width: '100%', background: '#f5f5f5', padding: '40px 0', ...style }}
-    >
-      <div
-        ref={hostRef}
-        style={{
-          width: '794px',
-          margin: '0 auto',
-          padding: '72px',
-          background: '#fff',
-          minHeight: '1123px',
-          boxShadow: '0 0 10px rgba(0,0,0,0.1)',
-          boxSizing: 'border-box',
-        }}
-      />
-    </div>
-  );
+  return <div ref={hostRef} className={className} style={{ width: '100%', ...style }} />;
 };

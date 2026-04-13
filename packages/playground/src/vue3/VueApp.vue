@@ -49,7 +49,21 @@
 
       <section class="demo-section">
         <h2>预览效果 (使用 DocStreamRenderer 组件)</h2>
-        <DocStreamRenderer :stream="stream" />
+        <div style="width: 100%; background: #f5f5f5; padding: 40px 0">
+          <div
+            style="
+              width: 794px;
+              margin: 0 auto;
+              padding: 72px;
+              background: #fff;
+              min-height: 1123px;
+              box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+              box-sizing: border-box;
+            "
+          >
+            <DocStreamRenderer :stream="stream" />
+          </div>
+        </div>
       </section>
     </main>
   </div>
