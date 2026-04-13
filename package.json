@@ -9,7 +9,7 @@
   ],
   "main": "./dist/core.cjs.js",
   "module": "./dist/core.es.js",
-  "types": "./dist/index.d.ts",
+  "types": "./dist/core.d.ts",
   "exports": {
     "./core": {
       "types": "./dist/core/index.d.ts",
@@ -22,7 +22,7 @@
       "require": "./dist/react.cjs.js"
     },
     "./vue": {
-      "types": "./dist/vue3/index.d.ts",
+      "types": "./dist/vue.d.ts",
       "import": "./dist/vue.es.js",
       "require": "./dist/vue.cjs.js"
     }
@@ -36,14 +36,16 @@
     "lint:fix": "eslint . --ext .js,.mjs,.cjs,.ts,.tsx,.vue --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "playground": "cd ./playground && pnpm run dev"
+    "playground": "cd ./playground && pnpm run dev",
+    "build:playground": "cd ./playground && pnpm run build",
+    "deploy:playground": "pnpm run build:playground && npx gh-pages -d playground/dist"
   },
   "dependencies": {
-    "docx": "^8.5.0",
     "lodash-es": "^4.17.21",
     "partial-json": "^0.1.7"
   },
   "peerDependencies": {
+    "docx": "^8.5.0",
     "react": ">=16.8.0",
     "react-dom": ">=16.8.0",
     "vue": ">=3.0.0"

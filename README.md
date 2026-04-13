@@ -5,7 +5,7 @@
 ## 安装
 
 ```bash
-pnpm add docstream-renderer docx docx-preview
+pnpm add docstream-renderer docx
 ```
 
 ## 使用 React
