@@ -9,6 +9,12 @@
 
 ---
 
+## playground
+
+在线示例：[https://wxwzl.github.io/doc-stream-renderer/](https://wxwzl.github.io/doc-stream-renderer/)
+
+---
+
 ## 安装
 
 ```bash
@@ -599,12 +605,6 @@ const ParsedDataSchema = z.object({
 | `tableCell.verticalAlign`                                                   | 单元格文字垂直对齐：`top` / `middle` / `bottom`                                               |
 | `listContent.level`                                                         | 列表嵌套层级，支持 `0` ~ `9`                                                                  |
 | `imageContent.wrap`                                                         | 图片环绕方式：`inline` / `square` / `tight` / `topAndBottom` / `behindText` / `inFrontOfText` |
-
----
-
-## playground
-
-在线示例：[https://wxwzl.github.io/doc-stream-renderer/](https://wxwzl.github.io/doc-stream-renderer/)
 
 ---
 
