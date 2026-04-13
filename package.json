@@ -5,7 +5,9 @@
   "author": "wxwzl",
   "type": "module",
   "files": [
-    "dist"
+    "dist",
+    "README.md",
+    "package.json"
   ],
   "main": "./dist/core.cjs.js",
   "module": "./dist/core.es.js",
@@ -40,6 +42,18 @@
     "build:playground": "cd ./playground && pnpm run build",
     "deploy:playground": "pnpm run build:playground && npx gh-pages -d playground/dist"
   },
+  "keywords": [
+    "doc",
+    "streaming",
+    "stream",
+    "renderer",
+    "word"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/wxwzl/doc-stream-renderer.git"
+  },
+  "homepage": "https://github.com/wxwzl/doc-stream-renderer",
   "dependencies": {
     "lodash-es": "^4.17.21",
     "partial-json": "^0.1.7"

@@ -33,6 +33,8 @@ const data = ref('{"blocks":[]');
 
 ```
 
+## [playground](https://github.com/wxwzl/doc-stream-renderer)
+
 ## 数据协议说明
 
 组件会自动处理不完整的 JSON 字符串。基础结构如下：
