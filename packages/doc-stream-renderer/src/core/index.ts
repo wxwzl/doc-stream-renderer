@@ -1,6 +1,22 @@
 import { Allow, parse } from 'partial-json';
 import * as docx from 'docx';
 
+export type ParagraphChild = docx.ParagraphChild;
+export type TextRunOptions = Exclude<ConstructorParameters<typeof docx.TextRun>[0], string>;
+export type MutableTextRunOptions = { -readonly [K in keyof TextRunOptions]?: TextRunOptions[K] };
+export type BorderStyleValue = (typeof docx.BorderStyle)[keyof typeof docx.BorderStyle];
+export type VerticalAlignValue = (typeof docx.VerticalAlign)[keyof typeof docx.VerticalAlign];
+export type WidthTypeValue = (typeof docx.WidthType)[keyof typeof docx.WidthType];
+export type TextWrappingTypeValue =
+  (typeof docx.TextWrappingType)[keyof typeof docx.TextWrappingType];
+export type ParagraphBorders = {
+  top?: docx.IBorderOptions;
+  bottom?: docx.IBorderOptions;
+  left?: docx.IBorderOptions;
+  right?: docx.IBorderOptions;
+};
+export type MutablePartial<T> = { -readonly [K in keyof T]?: T[K] };
+
 export interface InlineStyle {
   fontWeight?: string;
   fontSize?: string;
@@ -9,11 +25,14 @@ export interface InlineStyle {
   textDecoration?: 'underline' | 'line-through' | string;
   backgroundColor?: string;
   verticalAlign?: 'super' | 'sub' | string;
+  letterSpacing?: string;
+  highlight?: string;
 }
 
 export interface InlineItem {
   text?: string;
   style?: InlineStyle;
+  href?: string;
 }
 
 export interface BlockStyle {
@@ -33,12 +52,20 @@ export interface BlockStyle {
   paddingBottom?: string;
   paddingLeft?: string;
   paddingRight?: string;
+  textIndent?: string;
+  borderTop?: string;
+  borderBottom?: string;
+  borderLeft?: string;
+  borderRight?: string;
 }
 
 export interface TableCell {
   content?: string | InlineItem[];
   colSpan?: number;
   rowSpan?: number;
+  width?: string | number;
+  textAlign?: 'left' | 'center' | 'right' | string;
+  verticalAlign?: 'top' | 'middle' | 'bottom' | string;
 }
 
 export interface TableRow {
@@ -53,6 +80,7 @@ export interface ImageContent {
   src: string;
   width?: number;
   height?: number;
+  wrap?: 'inline' | 'square' | 'tight' | 'topAndBottom' | 'behindText' | 'inFrontOfText';
 }
 
 export interface CodeContent {
@@ -62,6 +90,7 @@ export interface CodeContent {
 
 export interface ListContent {
   items?: string[];
+  level?: number;
 }
 
 export type BlockContent =
@@ -106,9 +135,29 @@ export interface GlobalStyle {
   fontFamily?: string;
 }
 
+export interface PageConfig {
+  size?: 'A4' | 'Letter' | { width: number; height: number };
+  orientation?: 'portrait' | 'landscape';
+  margin?: {
+    top?: string;
+    right?: string;
+    bottom?: string;
+    left?: string;
+  };
+}
+
+export interface DocumentMeta {
+  title?: string;
+  creator?: string;
+  description?: string;
+  subject?: string;
+}
+
 export interface ParsedData {
   blocks?: Block[];
   globalStyle?: GlobalStyle;
+  page?: PageConfig;
+  meta?: DocumentMeta;
 }
 
 function isHeading(type: BlockType | undefined): type is 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' {
@@ -134,10 +183,16 @@ function buildInlineHtml(items: InlineItem[]): string {
         s.textDecoration ? `text-decoration: ${s.textDecoration}` : '',
         s.backgroundColor ? `background-color: ${s.backgroundColor}` : '',
         s.verticalAlign ? `vertical-align: ${s.verticalAlign}` : '',
+        s.letterSpacing ? `letter-spacing: ${s.letterSpacing}` : '',
+        s.highlight ? `background-color: ${s.highlight}` : '',
       ]
         .filter(Boolean)
         .join('; ');
-      return `<span style="${styles}">${escapeHtml(item.text || '')}</span>`;
+      const text = escapeHtml(item.text || '');
+      if (item.href) {
+        return `<a href="${escapeHtml(item.href)}" style="${styles};text-decoration:underline;color:#1890ff;">${text}</a>`;
+      }
+      return `<span style="${styles}">${text}</span>`;
     })
     .join('');
 }
@@ -170,6 +225,11 @@ function buildBlockStyle(block: Block, globalStyle: GlobalStyle): string {
     s.paddingBottom ? `padding-bottom: ${s.paddingBottom}` : '',
     s.paddingLeft ? `padding-left: ${s.paddingLeft}` : '',
     s.paddingRight ? `padding-right: ${s.paddingRight}` : '',
+    s.textIndent ? `text-indent: ${s.textIndent}` : '',
+    s.borderTop ? `border-top: ${s.borderTop}` : '',
+    s.borderBottom ? `border-bottom: ${s.borderBottom}` : '',
+    s.borderLeft ? `border-left: ${s.borderLeft}` : '',
+    s.borderRight ? `border-right: ${s.borderRight}` : '',
   ]
     .filter(Boolean)
     .join(';');
@@ -181,10 +241,20 @@ function renderTableHtml(content: TableContent): string {
     .map(row => {
       const cells = row.cells || [];
       const cellsHtml = cells
-        .map(
-          cell =>
-            `<td colspan="${cell.colSpan || 1}" rowspan="${cell.rowSpan || 1}" style="border:1px solid #ccc;padding:8px;">${Array.isArray(cell.content) ? buildInlineHtml(cell.content) : escapeHtml((cell.content as string) || '')}</td>`
-        )
+        .map(cell => {
+          const cellStyles = [
+            'border:1px solid #ccc',
+            'padding:8px',
+            cell.width
+              ? `width:${typeof cell.width === 'number' ? cell.width + 'px' : cell.width}`
+              : '',
+            cell.textAlign ? `text-align:${cell.textAlign}` : '',
+            cell.verticalAlign ? `vertical-align:${cell.verticalAlign}` : '',
+          ]
+            .filter(Boolean)
+            .join(';');
+          return `<td colspan="${cell.colSpan || 1}" rowspan="${cell.rowSpan || 1}" style="${cellStyles}">${Array.isArray(cell.content) ? buildInlineHtml(cell.content) : escapeHtml((cell.content as string) || '')}</td>`;
+        })
         .join('');
       return `<tr>${cellsHtml}</tr>`;
     })
@@ -193,10 +263,19 @@ function renderTableHtml(content: TableContent): string {
 }
 
 function renderImageHtml(content: ImageContent): string {
-  const { src, width, height } = content;
-  const styleParts: string[] = ['max-width:100%;display:block;'];
+  const { src, width, height, wrap } = content;
+  const styleParts: string[] = ['max-width:100%;'];
   if (width) styleParts.push(`width:${width}px;`);
   if (height) styleParts.push(`height:${height}px;`);
+  if (wrap && wrap !== 'inline') {
+    if (wrap === 'topAndBottom') {
+      styleParts.push('display:block;margin:10px auto;');
+    } else {
+      styleParts.push('float:left;margin:0 16px 10px 0;');
+    }
+  } else {
+    styleParts.push('display:block;margin:0 auto;');
+  }
   return `<img src="${escapeHtml(src)}" style="${styleParts.join('')}" />`;
 }
 
@@ -243,12 +322,15 @@ export function getHtmlFromStream(rawStr: string): string {
         // list
         if (type === 'ol' || type === 'ul') {
           const listTag = type === 'ol' ? 'ol' : 'ul';
-          const items =
+          const listObj =
             typeof content === 'object' && content !== null && 'items' in content
-              ? (content as ListContent).items || []
-              : [];
+              ? (content as ListContent)
+              : { items: [] };
+          const items = listObj.items || [];
+          const level = listObj.level || 0;
+          const indent = 24 + level * 24;
           const itemsHtml = items.map((i: string) => `<li>${escapeHtml(i)}</li>`).join('');
-          return `<${listTag} style="margin:0;${styleStr};padding-left:24px;">${itemsHtml}</${listTag}>`;
+          return `<${listTag} style="margin:0;${styleStr};padding-left:${indent}px;">${itemsHtml}</${listTag}>`;
         }
 
         // table
@@ -269,7 +351,11 @@ export function getHtmlFromStream(rawStr: string): string {
               ? (content as ImageContent)
               : { src: '' };
           if (!imgContent.src) return '';
-          return `<div style="margin:0;${styleStr};text-align:center;">${renderImageHtml(imgContent)}</div>`;
+          const wrap = imgContent.wrap;
+          if (wrap && wrap !== 'inline' && wrap !== 'topAndBottom') {
+            return `<div style="margin:0;${styleStr};float:left;">${renderImageHtml(imgContent)}</div>`;
+          }
+          return `<div style="margin:0;${styleStr};">${renderImageHtml(imgContent)}</div>`;
         }
 
         // quote / blockquote
@@ -327,13 +413,25 @@ function twipsFromPx(pxStr: string | undefined): number {
   return Math.round(px * 15);
 }
 
+function normalizeHexColor(color?: string): string | undefined {
+  if (!color) return undefined;
+  let hex = color.replace('#', '');
+  if (/^[0-9a-fA-F]{3}$/.test(hex)) {
+    hex = hex
+      .split('')
+      .map(c => c + c)
+      .join('');
+  }
+  return hex;
+}
+
 function createTextRuns(
   content: BlockContent,
   globalStyle: GlobalStyle,
   blockStyle: BlockStyle,
   defaultColor?: string
-): docx.TextRun[] {
-  const resolveColor = (color?: string) => (color ? color.replace('#', '') : undefined);
+): ParagraphChild[] {
+  const resolveColor = (color?: string) => normalizeHexColor(color);
   const resolveFont = () => blockStyle.fontFamily || globalStyle.fontFamily;
   const resolveSize = (size?: string) =>
     size ? halfPointFromPx(size) : halfPointFromPx(globalStyle.fontSize);
@@ -341,7 +439,7 @@ function createTextRuns(
   if (Array.isArray(content)) {
     return content.map((c: InlineItem) => {
       const s = c.style || {};
-      const runConfig: any = {
+      const runConfig: MutableTextRunOptions = {
         text: c.text || '',
         bold: s.fontWeight === 'bold',
         italics: s.fontStyle === 'italic',
@@ -356,18 +454,32 @@ function createTextRuns(
         runConfig.strike = true;
       }
       if (s.backgroundColor) {
-        runConfig.shading = { fill: s.backgroundColor.replace('#', '') };
+        runConfig.shading = { fill: normalizeHexColor(s.backgroundColor) };
       }
       if (s.verticalAlign === 'super') {
         runConfig.superScript = true;
       } else if (s.verticalAlign === 'sub') {
         runConfig.subScript = true;
       }
-      return new docx.TextRun(runConfig);
+      if (s.letterSpacing) {
+        const lsPx = parseInt(s.letterSpacing, 10);
+        if (!Number.isNaN(lsPx)) {
+          runConfig.characterSpacing = lsPx * 20;
+        }
+      }
+      if (s.highlight) {
+        runConfig.highlight = s.highlight as never;
+      }
+
+      const textRun = new docx.TextRun(runConfig);
+      if (c.href) {
+        return new docx.ExternalHyperlink({ children: [textRun], link: c.href });
+      }
+      return textRun;
     });
   }
   const text = typeof content === 'string' ? content : (content as InlineItem)?.text || '';
-  const runConfig: any = {
+  const runConfig: MutableTextRunOptions = {
     text,
     bold: blockStyle.fontWeight === 'bold',
     size: resolveSize(blockStyle.fontSize),
@@ -391,38 +503,124 @@ function base64ToUint8Array(base64: string): Uint8Array {
   return bytes;
 }
 
+function cellVerticalAlign(align?: string): VerticalAlignValue {
+  if (align === 'top') return docx.VerticalAlign.TOP;
+  if (align === 'bottom') return docx.VerticalAlign.BOTTOM;
+  return docx.VerticalAlign.CENTER;
+}
+
+function cellWidth(width?: string | number): { size: number; type: WidthTypeValue } | undefined {
+  if (width === undefined) return undefined;
+  if (typeof width === 'string') {
+    if (width.endsWith('%')) {
+      const pct = parseFloat(width);
+      if (!Number.isNaN(pct)) return { size: pct, type: docx.WidthType.PERCENTAGE };
+    }
+    const px = parseInt(width, 10);
+    if (!Number.isNaN(px)) return { size: px * 20, type: docx.WidthType.DXA };
+  }
+  if (typeof width === 'number') {
+    if (width <= 100) return { size: width, type: docx.WidthType.PERCENTAGE };
+    return { size: width * 20, type: docx.WidthType.DXA };
+  }
+  return undefined;
+}
+
 function createDocxTable(content: TableContent, globalStyle: GlobalStyle): docx.Table {
   const rows = (content.rows || []).map(
     row =>
       new docx.TableRow({
-        children: (row.cells || []).map(
-          cell =>
-            new docx.TableCell({
-              children: [
-                new docx.Paragraph({
-                  children: Array.isArray(cell.content)
-                    ? createTextRuns(cell.content, globalStyle, {})
-                    : createTextRuns(cell.content || '', globalStyle, {}),
-                }),
-              ],
-              columnSpan: cell.colSpan,
-              rowSpan: cell.rowSpan,
-              verticalAlign: docx.VerticalAlign.CENTER,
-              margins: { top: 120, bottom: 120, left: 120, right: 120 },
-              borders: {
-                top: { style: docx.BorderStyle.SINGLE, size: 1, color: 'CCCCCC' },
-                bottom: { style: docx.BorderStyle.SINGLE, size: 1, color: 'CCCCCC' },
-                left: { style: docx.BorderStyle.SINGLE, size: 1, color: 'CCCCCC' },
-                right: { style: docx.BorderStyle.SINGLE, size: 1, color: 'CCCCCC' },
-              },
-            })
-        ),
+        children: (row.cells || []).map(cell => {
+          const cellAlign =
+            cell.textAlign === 'center'
+              ? docx.AlignmentType.CENTER
+              : cell.textAlign === 'right'
+                ? docx.AlignmentType.RIGHT
+                : docx.AlignmentType.LEFT;
+          return new docx.TableCell({
+            children: [
+              new docx.Paragraph({
+                children: Array.isArray(cell.content)
+                  ? createTextRuns(cell.content, globalStyle, {})
+                  : createTextRuns(cell.content || '', globalStyle, {}),
+                alignment: cellAlign,
+              }),
+            ],
+            columnSpan: cell.colSpan,
+            rowSpan: cell.rowSpan,
+            verticalAlign: cellVerticalAlign(cell.verticalAlign),
+            margins: { top: 120, bottom: 120, left: 120, right: 120 },
+            borders: {
+              top: { style: docx.BorderStyle.SINGLE, size: 1, color: 'CCCCCC' },
+              bottom: { style: docx.BorderStyle.SINGLE, size: 1, color: 'CCCCCC' },
+              left: { style: docx.BorderStyle.SINGLE, size: 1, color: 'CCCCCC' },
+              right: { style: docx.BorderStyle.SINGLE, size: 1, color: 'CCCCCC' },
+            },
+            width: cellWidth(cell.width),
+          });
+        }),
       })
   );
   return new docx.Table({
     rows,
     width: { size: 100, type: docx.WidthType.PERCENTAGE },
   });
+}
+
+function parseBorderStyle(borderStr?: string): docx.IBorderOptions | undefined {
+  if (!borderStr) return undefined;
+  const parts = borderStr.trim().split(/\s+/);
+  if (parts.length < 3) return undefined;
+  const sizePx = parseInt(parts[0], 10);
+  const styleName = parts[1];
+  const color = normalizeHexColor(parts[2]);
+  let style: BorderStyleValue = docx.BorderStyle.SINGLE;
+  if (styleName === 'dashed') style = docx.BorderStyle.DASHED;
+  else if (styleName === 'dotted') style = docx.BorderStyle.DOTTED;
+  else if (styleName === 'double') style = docx.BorderStyle.DOUBLE;
+  return {
+    color,
+    space: 1,
+    style,
+    size: Math.max(1, Math.round(sizePx * 6)),
+  };
+}
+
+function buildParagraphBorder(style: BlockStyle) {
+  const border: ParagraphBorders = {};
+  if (style.borderTop) border.top = parseBorderStyle(style.borderTop);
+  if (style.borderBottom) border.bottom = parseBorderStyle(style.borderBottom);
+  if (style.borderLeft) border.left = parseBorderStyle(style.borderLeft);
+  if (style.borderRight) border.right = parseBorderStyle(style.borderRight);
+  return Object.keys(border).length > 0 ? border : undefined;
+}
+
+function imageFloating(wrap?: string): Partial<docx.IFloating> | undefined {
+  if (!wrap || wrap === 'inline') return undefined;
+  const wrapTypeMap: Record<string, TextWrappingTypeValue> = {
+    square: docx.TextWrappingType.SQUARE,
+    tight: docx.TextWrappingType.TIGHT,
+    topAndBottom: docx.TextWrappingType.TOP_AND_BOTTOM,
+  };
+  const floatConfig: MutablePartial<docx.IFloating> = {
+    margins: { top: 144000, bottom: 144000, left: 180000, right: 180000 },
+    wrap: {
+      type: wrapTypeMap[wrap] || docx.TextWrappingType.NONE,
+      side: docx.TextWrappingSide.BOTH_SIDES,
+    },
+    horizontalPosition: {
+      relative: docx.HorizontalPositionRelativeFrom.COLUMN,
+      align: docx.HorizontalPositionAlign.LEFT,
+    },
+    verticalPosition: {
+      relative: docx.VerticalPositionRelativeFrom.PARAGRAPH,
+      align: docx.VerticalPositionAlign.TOP,
+    },
+  };
+  if (wrap === 'behindText') {
+    floatConfig.behindDocument = true;
+  }
+  return floatConfig;
 }
 
 /**
@@ -435,9 +633,15 @@ export async function generateDocxBlob(jsonStr: string): Promise<Blob> {
     if (!data || typeof data !== 'object') {
       throw new Error('Invalid JSON data');
     }
-    const { blocks = [], globalStyle = {} } = data;
+    const { blocks = [], globalStyle = {}, page, meta } = data;
 
     const children: (docx.Paragraph | docx.Table)[] = [];
+
+    function pageSizeConfig(size?: PageConfig['size']) {
+      if (size === 'Letter') return { width: 12240, height: 15840 };
+      if (typeof size === 'object' && size) return size;
+      return { width: 11906, height: 16838 };
+    }
 
     blocks.forEach((block: Block) => {
       const style = block.style || {};
@@ -455,8 +659,19 @@ export async function generateDocxBlob(jsonStr: string): Promise<Blob> {
       };
 
       const paragraphShading = style.backgroundColor
-        ? { fill: style.backgroundColor.replace('#', '') }
+        ? { fill: normalizeHexColor(style.backgroundColor) }
         : undefined;
+
+      const paragraphIndent: MutablePartial<docx.IIndentAttributesProperties> = {};
+      if (style.textIndent) {
+        paragraphIndent.firstLine = twipsFromPx(style.textIndent);
+      }
+      const finalIndent =
+        Object.keys(paragraphIndent).length > 0
+          ? (paragraphIndent as docx.IIndentAttributesProperties)
+          : undefined;
+
+      const customBorder = buildParagraphBorder(style);
 
       const alignment =
         style.textAlign === 'center'
@@ -485,6 +700,8 @@ export async function generateDocxBlob(jsonStr: string): Promise<Blob> {
             alignment,
             spacing: commonSpacing,
             shading: paragraphShading,
+            indent: finalIndent,
+            border: customBorder,
           })
         );
         return;
@@ -492,19 +709,23 @@ export async function generateDocxBlob(jsonStr: string): Promise<Blob> {
 
       // list
       if (type === 'ol' || type === 'ul') {
-        const items =
+        const listObj =
           typeof content === 'object' && content !== null && 'items' in content
-            ? (content as ListContent).items || []
-            : [];
+            ? (content as ListContent)
+            : { items: [] };
+        const items = listObj.items || [];
+        const level = Math.min(Math.max(listObj.level || 0, 0), 9);
         items.forEach((text: string) => {
           children.push(
             new docx.Paragraph({
               children: createTextRuns(text || '', globalStyle, style),
-              bullet: type === 'ul' ? { level: 0 } : undefined,
-              numbering: type === 'ol' ? { reference: 'main-num', level: 0 } : undefined,
+              bullet: type === 'ul' ? { level } : undefined,
+              numbering: type === 'ol' ? { reference: 'main-num', level } : undefined,
               alignment,
               spacing: commonSpacing,
               shading: paragraphShading,
+              indent: finalIndent,
+              border: customBorder,
             })
           );
         });
@@ -542,12 +763,21 @@ export async function generateDocxBlob(jsonStr: string): Promise<Blob> {
                   new docx.ImageRun({
                     data: imageBuffer,
                     transformation: { width, height },
-                    type: 'jpg',
+                    type: (() => {
+                      const src = imgContent.src || '';
+                      if (src.includes('data:image/png')) return 'png';
+                      if (src.includes('data:image/jpeg') || src.includes('data:image/jpg'))
+                        return 'jpg';
+                      return 'png';
+                    })(),
+                    floating: imageFloating(imgContent.wrap) as docx.IFloating,
                   }),
                 ],
                 alignment,
                 spacing: commonSpacing,
                 shading: paragraphShading,
+                indent: finalIndent,
+                border: customBorder,
               })
             );
           } catch {
@@ -559,20 +789,22 @@ export async function generateDocxBlob(jsonStr: string): Promise<Blob> {
 
       // quote / blockquote
       if (type === 'quote' || type === 'blockquote') {
+        const quoteBorder = customBorder || {};
+        if (!quoteBorder.left) {
+          quoteBorder.left = {
+            color: 'CCCCCC',
+            space: 8,
+            style: docx.BorderStyle.SINGLE,
+            size: 12,
+          };
+        }
         children.push(
           new docx.Paragraph({
             children: createTextRuns(content || '', globalStyle, style),
             alignment,
             spacing: commonSpacing,
-            indent: { left: twipsFromPx('16px') || 240 },
-            border: {
-              left: {
-                color: 'CCCCCC',
-                space: 8,
-                style: docx.BorderStyle.SINGLE,
-                size: 12,
-              },
-            },
+            indent: finalIndent || { left: twipsFromPx('16px') || 240 },
+            border: quoteBorder,
             shading: paragraphShading,
           })
         );
@@ -602,6 +834,8 @@ export async function generateDocxBlob(jsonStr: string): Promise<Blob> {
             alignment,
             spacing: commonSpacing,
             shading: paragraphShading || { fill: 'F4F4F4' },
+            indent: finalIndent,
+            border: customBorder,
           })
         );
         return;
@@ -642,14 +876,37 @@ export async function generateDocxBlob(jsonStr: string): Promise<Blob> {
           alignment,
           spacing: commonSpacing,
           shading: paragraphShading,
+          indent: finalIndent,
+          border: customBorder,
         })
       );
     });
 
+    const sectionProps: {
+      page?: {
+        size?: { width: number; height: number };
+        margin?: { top: number; right: number; bottom: number; left: number };
+        orientation?: typeof docx.PageOrientation.LANDSCAPE;
+      };
+    } = {
+      page: {
+        size: pageSizeConfig(page?.size),
+        margin: {
+          top: twipsFromPx(page?.margin?.top) || 1440,
+          right: twipsFromPx(page?.margin?.right) || 1440,
+          bottom: twipsFromPx(page?.margin?.bottom) || 1440,
+          left: twipsFromPx(page?.margin?.left) || 1440,
+        },
+      },
+    };
+    if (sectionProps.page && page?.orientation === 'landscape') {
+      sectionProps.page.orientation = docx.PageOrientation.LANDSCAPE;
+    }
+
     const doc = new docx.Document({
       sections: [
         {
-          properties: {},
+          properties: sectionProps,
           children,
         },
       ],
@@ -657,12 +914,19 @@ export async function generateDocxBlob(jsonStr: string): Promise<Blob> {
         config: [
           {
             reference: 'main-num',
-            levels: [
-              { level: 0, format: 'decimal', text: '%1.', alignment: docx.AlignmentType.START },
-            ],
+            levels: Array.from({ length: 10 }).map((_, i) => ({
+              level: i,
+              format: 'decimal',
+              text: '%1.',
+              alignment: docx.AlignmentType.START,
+            })),
           },
         ],
       },
+      creator: meta?.creator,
+      title: meta?.title,
+      description: meta?.description,
+      subject: meta?.subject,
     });
 
     return await docx.Packer.toBlob(doc);

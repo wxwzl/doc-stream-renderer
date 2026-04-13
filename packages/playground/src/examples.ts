@@ -316,6 +316,473 @@ export const examples = {
       2
     ),
   },
+  fullFeatures: {
+    name: '全部特性',
+    desc: '展示所有新增配置项',
+    data: JSON.stringify(
+      {
+        globalStyle: {
+          fontSize: '14px',
+          lineHeight: '1.8',
+          fontFamily: 'Microsoft YaHei, sans-serif',
+        },
+        page: {
+          size: 'A4',
+          orientation: 'portrait',
+          margin: {
+            top: '72pt',
+            right: '72pt',
+            bottom: '72pt',
+            left: '72pt',
+          },
+        },
+        meta: {
+          title: '全部特性演示文档',
+          creator: 'Doc Stream Renderer',
+          description: '展示所有新增配置项的完整示例',
+          subject: '特性演示',
+        },
+        blocks: [
+          {
+            type: 'h1',
+            content: '全部特性演示',
+            style: {
+              textAlign: 'center',
+              fontWeight: 'bold',
+              fontSize: '26px',
+              marginBottom: '24px',
+            },
+          },
+          {
+            type: 'h2',
+            content: '1. 富文本与内联样式',
+            style: {
+              fontWeight: 'bold',
+              fontSize: '16px',
+              marginTop: '18px',
+              marginBottom: '10px',
+            },
+          },
+          {
+            type: 'p',
+            content: [
+              { text: '这是普通文本。' },
+              { text: '加粗', style: { fontWeight: 'bold' } },
+              { text: '、' },
+              { text: '斜体', style: { fontStyle: 'italic' } },
+              { text: '、' },
+              { text: '下划线', style: { textDecoration: 'underline' } },
+              { text: '、' },
+              { text: '删除线', style: { textDecoration: 'line-through' } },
+              { text: '、' },
+              { text: '红色文字', style: { color: '#e74c3c' } },
+              { text: '、' },
+              { text: '黄色背景', style: { backgroundColor: '#f1c40f' } },
+              { text: '、' },
+              { text: '宽字符间距', style: { letterSpacing: '2px' } },
+              { text: '、' },
+              { text: '高亮', style: { highlight: 'cyan' } },
+              { text: '、' },
+              { text: '上标', style: { verticalAlign: 'super', fontSize: '12px' } },
+              { text: '与' },
+              { text: '下标', style: { verticalAlign: 'sub', fontSize: '12px' } },
+              { text: '。更多请访问 ' },
+              {
+                text: '官网',
+                style: { color: '#1890ff' },
+                href: 'https://github.com/wxwzl/doc-stream-renderer',
+              },
+              { text: '。' },
+            ],
+          },
+          {
+            type: 'h2',
+            content: '2. 段落边框与首行缩进',
+            style: {
+              fontWeight: 'bold',
+              fontSize: '16px',
+              marginTop: '18px',
+              marginBottom: '10px',
+            },
+          },
+          {
+            type: 'p',
+            content:
+              '本段落设置了首行缩进 2em，并且四边均有边框。你可以看到左侧有一条醒目的蓝色边框，上下是浅灰色细线，右侧是绿色虚线边框。',
+            style: {
+              textIndent: '2em',
+              borderLeft: '4px solid #1890ff',
+              borderTop: '1px solid #ccc',
+              borderBottom: '1px solid #ccc',
+              borderRight: '2px dashed #2ecc71',
+              padding: '10px',
+              marginTop: '10px',
+              marginBottom: '10px',
+              backgroundColor: '#fafafa',
+            },
+          },
+          {
+            type: 'h2',
+            content: '3. 表格增强',
+            style: {
+              fontWeight: 'bold',
+              fontSize: '16px',
+              marginTop: '18px',
+              marginBottom: '10px',
+            },
+          },
+          {
+            type: 'table',
+            content: {
+              rows: [
+                {
+                  cells: [
+                    {
+                      content: '功能项',
+                      width: '30%',
+                      textAlign: 'center',
+                      verticalAlign: 'middle',
+                    },
+                    { content: '状态', width: '20%', textAlign: 'center', verticalAlign: 'middle' },
+                    { content: '说明', width: '50%', textAlign: 'center', verticalAlign: 'middle' },
+                  ],
+                },
+                {
+                  cells: [
+                    { content: '超链接', textAlign: 'left', verticalAlign: 'top' },
+                    { content: '已完成', textAlign: 'center', verticalAlign: 'middle' },
+                    { content: '支持行内文本链接跳转' },
+                  ],
+                },
+                {
+                  cells: [
+                    { content: '首行缩进', textAlign: 'left', verticalAlign: 'top' },
+                    { content: '已完成', textAlign: 'center', verticalAlign: 'middle' },
+                    { content: '段落级别 textIndent 控制' },
+                  ],
+                },
+                {
+                  cells: [
+                    { content: '段落边框', textAlign: 'left', verticalAlign: 'top' },
+                    { content: '已完成', textAlign: 'center', verticalAlign: 'middle' },
+                    { content: '支持四边独立边框配置' },
+                  ],
+                },
+                {
+                  cells: [
+                    { content: '图片环绕', textAlign: 'left', verticalAlign: 'top' },
+                    { content: '已完成', textAlign: 'center', verticalAlign: 'middle' },
+                    { content: '支持 square / tight / topAndBottom 等环绕方式' },
+                  ],
+                },
+              ],
+            },
+          },
+          {
+            type: 'h2',
+            content: '4. 列表嵌套层级',
+            style: {
+              fontWeight: 'bold',
+              fontSize: '16px',
+              marginTop: '18px',
+              marginBottom: '10px',
+            },
+          },
+          {
+            type: 'ul',
+            content: {
+              items: ['一级无序列表项 A', '一级无序列表项 B'],
+              level: 0,
+            },
+          },
+          {
+            type: 'ul',
+            content: {
+              items: ['二级无序列表项 C', '二级无序列表项 D'],
+              level: 1,
+            },
+          },
+          {
+            type: 'ol',
+            content: {
+              items: ['一级有序列表项 1', '一级有序列表项 2'],
+              level: 0,
+            },
+          },
+          {
+            type: 'ol',
+            content: {
+              items: ['二级有序列表项 3'],
+              level: 2,
+            },
+          },
+          {
+            type: 'h2',
+            content: '5. 代码块',
+            style: {
+              fontWeight: 'bold',
+              fontSize: '16px',
+              marginTop: '18px',
+              marginBottom: '10px',
+            },
+          },
+          {
+            type: 'code',
+            content: {
+              code: 'const add = (a: number, b: number) =\u003e {\n  return a + b;\n};\nconsole.log(add(2, 3));',
+              language: 'typescript',
+            },
+          },
+          {
+            type: 'h2',
+            content: '6. 引用块',
+            style: {
+              fontWeight: 'bold',
+              fontSize: '16px',
+              marginTop: '18px',
+              marginBottom: '10px',
+            },
+          },
+          {
+            type: 'quote',
+            content:
+              '这是引用块内容。默认左侧会有蓝色竖线，也可以通过 borderLeft 自定义为其他颜色或样式。',
+            style: {
+              marginTop: '10px',
+              marginBottom: '10px',
+            },
+          },
+          {
+            type: 'pageBreak',
+          },
+          {
+            type: 'h2',
+            content: '7. 图片与环绕方式',
+            style: {
+              fontWeight: 'bold',
+              fontSize: '16px',
+              marginTop: '18px',
+              marginBottom: '10px',
+            },
+          },
+          {
+            type: 'h3',
+            content: '7.1 inline（行内嵌入）',
+            style: {
+              fontWeight: 'bold',
+              fontSize: '14px',
+              marginTop: '10px',
+              marginBottom: '6px',
+            },
+          },
+          {
+            type: 'p',
+            content: [
+              { text: '图片像文字一样嵌入在行内，适合小图标或表情。例如：' },
+              { text: '[图]', style: { color: '#e74c3c' } },
+              { text: ' 这就是 inline 的效果。' },
+            ],
+            style: {
+              marginBottom: '10px',
+            },
+          },
+          {
+            type: 'image',
+            content: {
+              src: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAAA8CAIAAAAfXYiZAAAAfElEQVR4nO3QQQkAIADAQEMYx/4pDGMFfQ3hYAHGjT2XLhv5wUfBggUrDxYsWHmwYMHKgwULVh4sWLDyYMGClQcLFqw8WLBg5cGCBSsPFixYebBgwcqDBQtWHixYsPJgwYKVBwsWrDxYsGDlwYIFKw8WLFh5sGDByoP10AEQdHjWGnpYxAAAAABJRU5ErkJggg==',
+              width: 80,
+              height: 48,
+              wrap: 'inline',
+            },
+          },
+          {
+            type: 'h3',
+            content: '7.2 square（四周环绕）',
+            style: {
+              fontWeight: 'bold',
+              fontSize: '14px',
+              marginTop: '10px',
+              marginBottom: '6px',
+            },
+          },
+          {
+            type: 'p',
+            content: 'square 环绕方式下，文字会沿着图片的矩形边界环绕。',
+            style: {
+              marginBottom: '10px',
+            },
+          },
+          {
+            type: 'image',
+            content: {
+              src: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAAA8CAIAAAAfXYiZAAAAfElEQVR4nO3QQQkAIADAQEMYx/4pDGMFfQ3hYAHGjT2XLhv5wUfBggUrDxYsWHmwYMHKgwULVh4sWLDyYMGClQcLFqw8WLBg5cGCBSsPFixYebBgwcqDBQtWHixYsPJgwYKVBwsWrDxYsGDlwYIFKw8WLFh5sGDByoP10AEQdHjWGnpYxAAAAABJRU5ErkJggg==',
+              width: 160,
+              height: 100,
+              wrap: 'square',
+            },
+          },
+          {
+            type: 'p',
+            content:
+              '可以看到，这段文字会自动填充到图片的右侧和下方，形成典型的图文混排效果。square 是最常用的环绕方式之一。',
+            style: {
+              marginTop: '10px',
+            },
+          },
+          {
+            type: 'h3',
+            content: '7.3 tight（紧密环绕）',
+            style: {
+              fontWeight: 'bold',
+              fontSize: '14px',
+              marginTop: '10px',
+              marginBottom: '6px',
+            },
+          },
+          {
+            type: 'p',
+            content: 'tight 环绕方式比 square 更紧密，文字会尽量贴近图片边缘。',
+            style: {
+              marginBottom: '10px',
+            },
+          },
+          {
+            type: 'image',
+            content: {
+              src: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAAA8CAIAAAAfXYiZAAAAfElEQVR4nO3QQQkAIADAQEMYx/4pDGMFfQ3hYAHGjT2XLhv5wUfBggUrDxYsWHmwYMHKgwULVh4sWLDyYMGClQcLFqw8WLBg5cGCBSsPFixYebBgwcqDBQtWHixYsPJgwYKVBwsWrDxYsGDlwYIFKw8WLFh5sGDByoP10AEQdHjWGnpYxAAAAABJRU5ErkJggg==',
+              width: 160,
+              height: 100,
+              wrap: 'tight',
+            },
+          },
+          {
+            type: 'p',
+            content:
+              '在 DOCX 中，tight 环绕会让文字更贴合图片的实际轮廓，HTML 预览中则表现为 tighter 的 float 布局。',
+            style: {
+              marginTop: '10px',
+            },
+          },
+          {
+            type: 'h3',
+            content: '7.4 topAndBottom（上下型环绕）',
+            style: {
+              fontWeight: 'bold',
+              fontSize: '14px',
+              marginTop: '10px',
+              marginBottom: '6px',
+            },
+          },
+          {
+            type: 'p',
+            content: 'topAndBottom 环绕方式下，文字只出现在图片的上方和下方，左右两侧不留文字。',
+            style: {
+              marginBottom: '10px',
+            },
+          },
+          {
+            type: 'image',
+            content: {
+              src: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAAA8CAIAAAAfXYiZAAAAfElEQVR4nO3QQQkAIADAQEMYx/4pDGMFfQ3hYAHGjT2XLhv5wUfBggUrDxYsWHmwYMHKgwULVh4sWLDyYMGClQcLFqw8WLBg5cGCBSsPFixYebBgwcqDBQtWHixYsPJgwYKVBwsWrDxYsGDlwYIFKw8WLFh5sGDByoP10AEQdHjWGnpYxAAAAABJRU5ErkJggg==',
+              width: 160,
+              height: 100,
+              wrap: 'topAndBottom',
+            },
+          },
+          {
+            type: 'p',
+            content:
+              '注意看，这段文字会出现在图片的下方，而图片左右两侧不会有文字环绕。适合需要独占一行的重要插图。',
+            style: {
+              marginTop: '10px',
+            },
+          },
+          {
+            type: 'h3',
+            content: '7.5 behindText（衬于文字下方）',
+            style: {
+              fontWeight: 'bold',
+              fontSize: '14px',
+              marginTop: '10px',
+              marginBottom: '6px',
+            },
+          },
+          {
+            type: 'p',
+            content: 'behindText 将图片置于文字底层，文字会覆盖在图片上方显示。',
+            style: {
+              marginBottom: '10px',
+            },
+          },
+          {
+            type: 'image',
+            content: {
+              src: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAAA8CAIAAAAfXYiZAAAAfElEQVR4nO3QQQkAIADAQEMYx/4pDGMFfQ3hYAHGjT2XLhv5wUfBggUrDxYsWHmwYMHKgwULVh4sWLDyYMGClQcLFqw8WLBg5cGCBSsPFixYebBgwcqDBQtWHixYsPJgwYKVBwsWrDxYsGDlwYIFKw8WLFh5sGDByoP10AEQdHjWGnpYxAAAAABJRU5ErkJggg==',
+              width: 160,
+              height: 100,
+              wrap: 'behindText',
+            },
+          },
+          {
+            type: 'p',
+            content:
+              '在 DOCX 中，这张图片会作为背景层出现；HTML 预览里我们采用 float 左对齐，以便在语义上保持与文档一致。',
+            style: {
+              marginTop: '10px',
+            },
+          },
+          {
+            type: 'h3',
+            content: '7.6 inFrontOfText（浮于文字上方）',
+            style: {
+              fontWeight: 'bold',
+              fontSize: '14px',
+              marginTop: '10px',
+              marginBottom: '6px',
+            },
+          },
+          {
+            type: 'p',
+            content: 'inFrontOfText 让图片浮在文字之上，常用于水印或悬浮标注效果。',
+            style: {
+              marginBottom: '10px',
+            },
+          },
+          {
+            type: 'image',
+            content: {
+              src: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAAA8CAIAAAAfXYiZAAAAfElEQVR4nO3QQQkAIADAQEMYx/4pDGMFfQ3hYAHGjT2XLhv5wUfBggUrDxYsWHmwYMHKgwULVh4sWLDyYMGClQcLFqw8WLBg5cGCBSsPFixYebBgwcqDBQtWHixYsPJgwYKVBwsWrDxYsGDlwYIFKw8WLFh5sGDByoP10AEQdHjWGnpYxAAAAABJRU5ErkJggg==',
+              width: 160,
+              height: 100,
+              wrap: 'inFrontOfText',
+            },
+          },
+          {
+            type: 'p',
+            content:
+              '以上展示了 doc-stream-renderer 支持的全部图片环绕配置：inline / square / tight / topAndBottom / behindText / inFrontOfText。',
+            style: {
+              marginTop: '10px',
+            },
+          },
+          {
+            type: 'divider',
+          },
+          {
+            type: 'p',
+            content: '以上展示了 doc-stream-renderer 支持的全部主要配置项。',
+            style: {
+              textAlign: 'center',
+              marginTop: '20px',
+              color: '#666',
+            },
+          },
+        ],
+      },
+      null,
+      2
+    ),
+  },
   incomplete: {
     name: '模拟流式数据',
     desc: '不完整的 JSON（模拟 LLM 流式输出）',
