@@ -92,86 +92,93 @@ export function getHtmlFromStream(rawStr: string): string {
  * 供开发者在外部按钮点击时调用
  */
 export async function generateDocxBlob(jsonStr: string): Promise<Blob> {
-  const data = parse(jsonStr) as ParsedData; // 下载时也使用容错解析，防止下载到一半的内容报错
-  const { blocks = [], globalStyle = {} } = data;
+  try {
+    const data = parse(jsonStr, Allow.ALL) as ParsedData | null; // 下载时也使用容错解析，防止下载到一半的内容报错
+    if (!data || typeof data !== 'object') {
+      throw new Error('Invalid JSON data');
+    }
+    const { blocks = [], globalStyle = {} } = data;
 
-  const children = blocks
-    .map((block: Block) => {
-      const style = block.style || {};
+    const children = blocks
+      .map((block: Block) => {
+        const style = block.style || {};
 
-      // 文字生成逻辑
-      const createTextRuns = (content: Block['content']) => {
-        if (Array.isArray(content)) {
-          return content.map(
-            (c: InlineItem) =>
-              new docx.TextRun({
-                text: c.text,
-                bold: c.style?.fontWeight === 'bold',
-                size: c.style?.fontSize
-                  ? parseInt(c.style.fontSize) * 2
-                  : globalStyle.fontSize
-                    ? parseInt(globalStyle.fontSize) * 2
-                    : 32,
+        // 文字生成逻辑
+        const createTextRuns = (content: Block['content']) => {
+          if (Array.isArray(content)) {
+            return content.map(
+              (c: InlineItem) =>
+                new docx.TextRun({
+                  text: c.text,
+                  bold: c.style?.fontWeight === 'bold',
+                  size: c.style?.fontSize
+                    ? parseInt(c.style.fontSize) * 2
+                    : globalStyle.fontSize
+                      ? parseInt(globalStyle.fontSize) * 2
+                      : 32,
+                })
+            );
+          }
+          return [
+            new docx.TextRun({
+              text: typeof content === 'string' ? content : (content as InlineItem)?.text || '',
+              bold: style.fontWeight === 'bold',
+              size: style.fontSize
+                ? parseInt(style.fontSize) * 2
+                : globalStyle.fontSize
+                  ? parseInt(globalStyle.fontSize) * 2
+                  : 32,
+            }),
+          ];
+        };
+
+        if (block.type === 'ol' || block.type === 'ul') {
+          const items = Array.isArray(block.content)
+            ? []
+            : (block.content as { items?: string[] })?.items || [];
+          return items.map(
+            (text: string) =>
+              new docx.Paragraph({
+                text,
+                bullet: block.type === 'ul' ? { level: 0 } : undefined,
+                numbering: block.type === 'ol' ? { reference: 'main-num', level: 0 } : undefined,
               })
           );
         }
-        return [
-          new docx.TextRun({
-            text: typeof content === 'string' ? content : (content as InlineItem)?.text || '',
-            bold: style.fontWeight === 'bold',
-            size: style.fontSize
-              ? parseInt(style.fontSize) * 2
-              : globalStyle.fontSize
-                ? parseInt(globalStyle.fontSize) * 2
-                : 32,
-          }),
-        ];
-      };
 
-      if (block.type === 'ol' || block.type === 'ul') {
-        const items = Array.isArray(block.content)
-          ? []
-          : (block.content as { items?: string[] })?.items || [];
-        return items.map(
-          (text: string) =>
-            new docx.Paragraph({
-              text,
-              bullet: block.type === 'ul' ? { level: 0 } : undefined,
-              numbering: block.type === 'ol' ? { reference: 'main-num', level: 0 } : undefined,
-            })
-        );
-      }
+        return new docx.Paragraph({
+          children: createTextRuns(block.content),
+          alignment:
+            style.textAlign === 'center'
+              ? docx.AlignmentType.CENTER
+              : style.textAlign === 'right'
+                ? docx.AlignmentType.RIGHT
+                : docx.AlignmentType.LEFT,
+          spacing: {
+            before: style.marginTop ? parseInt(style.marginTop) * 20 : 0,
+            after: style.marginBottom ? parseInt(style.marginBottom) * 20 : 0,
+            line: globalStyle.lineHeight ? parseFloat(globalStyle.lineHeight) * 240 : 400,
+          },
+        });
+      })
+      .flat();
 
-      return new docx.Paragraph({
-        children: createTextRuns(block.content),
-        alignment:
-          style.textAlign === 'center'
-            ? docx.AlignmentType.CENTER
-            : style.textAlign === 'right'
-              ? docx.AlignmentType.RIGHT
-              : docx.AlignmentType.LEFT,
-        spacing: {
-          before: style.marginTop ? parseInt(style.marginTop) * 20 : 0,
-          after: style.marginBottom ? parseInt(style.marginBottom) * 20 : 0,
-          line: globalStyle.lineHeight ? parseFloat(globalStyle.lineHeight) * 240 : 400,
-        },
-      });
-    })
-    .flat();
+    const doc = new docx.Document({
+      sections: [{ properties: {}, children }],
+      numbering: {
+        config: [
+          {
+            reference: 'main-num',
+            levels: [
+              { level: 0, format: 'decimal', text: '%1.', alignment: docx.AlignmentType.START },
+            ],
+          },
+        ],
+      },
+    });
 
-  const doc = new docx.Document({
-    sections: [{ properties: {}, children }],
-    numbering: {
-      config: [
-        {
-          reference: 'main-num',
-          levels: [
-            { level: 0, format: 'decimal', text: '%1.', alignment: docx.AlignmentType.START },
-          ],
-        },
-      ],
-    },
-  });
-
-  return await docx.Packer.toBlob(doc);
+    return await docx.Packer.toBlob(doc);
+  } catch (error) {
+    return Promise.reject(error);
+  }
 }
