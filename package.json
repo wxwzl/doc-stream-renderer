@@ -30,6 +30,7 @@
     }
   },
   "scripts": {
+    "prepublish": "pnpm run build",
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
