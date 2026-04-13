@@ -271,6 +271,172 @@ interface ParsedData {
 }
 ```
 
+### Zod Schema 定义
+
+如果你使用 [Zod](https://github.com/colinhacks/zod) 做运行时校验，可以直接参考下面的 schema 定义：
+
+```ts
+import { z } from 'zod';
+
+const InlineStyleSchema = z.object({
+  fontWeight: z.string().optional(),
+  fontSize: z.string().optional(),
+  fontStyle: z.string().optional(),
+  color: z.string().optional(),
+  textDecoration: z.string().optional(),
+  backgroundColor: z.string().optional(),
+  verticalAlign: z.string().optional(),
+  letterSpacing: z.string().optional(),
+  highlight: z.string().optional(),
+});
+
+const InlineItemSchema = z.object({
+  text: z.string().optional(),
+  style: InlineStyleSchema.optional(),
+  href: z.string().optional(),
+});
+
+const BlockStyleSchema = z.object({
+  textAlign: z.string().optional(),
+  fontWeight: z.string().optional(),
+  fontSize: z.string().optional(),
+  lineHeight: z.string().optional(),
+  fontFamily: z.string().optional(),
+  color: z.string().optional(),
+  backgroundColor: z.string().optional(),
+  marginTop: z.string().optional(),
+  marginBottom: z.string().optional(),
+  marginLeft: z.string().optional(),
+  marginRight: z.string().optional(),
+  padding: z.string().optional(),
+  paddingTop: z.string().optional(),
+  paddingBottom: z.string().optional(),
+  paddingLeft: z.string().optional(),
+  paddingRight: z.string().optional(),
+  textIndent: z.string().optional(),
+  borderTop: z.string().optional(),
+  borderBottom: z.string().optional(),
+  borderLeft: z.string().optional(),
+  borderRight: z.string().optional(),
+});
+
+const TableCellSchema: z.ZodType<any> = z.lazy(() =>
+  z.object({
+    content: z.union([z.string(), z.array(InlineItemSchema)]).optional(),
+    colSpan: z.number().optional(),
+    rowSpan: z.number().optional(),
+    width: z.union([z.string(), z.number()]).optional(),
+    textAlign: z.string().optional(),
+    verticalAlign: z.string().optional(),
+  })
+);
+
+const TableRowSchema = z.object({
+  cells: z.array(TableCellSchema),
+});
+
+const TableContentSchema = z.object({
+  rows: z.array(TableRowSchema),
+});
+
+const ImageContentSchema = z.object({
+  src: z.string(),
+  width: z.number().optional(),
+  height: z.number().optional(),
+  wrap: z
+    .enum(['inline', 'square', 'tight', 'topAndBottom', 'behindText', 'inFrontOfText'])
+    .optional(),
+});
+
+const CodeContentSchema = z.object({
+  code: z.string(),
+  language: z.string().optional(),
+});
+
+const ListContentSchema = z.object({
+  items: z.array(z.string()).optional(),
+  level: z.number().optional(),
+});
+
+const BlockTypeSchema = z
+  .enum([
+    'h1',
+    'h2',
+    'h3',
+    'h4',
+    'h5',
+    'h6',
+    'p',
+    'paragraph',
+    'ul',
+    'ol',
+    'table',
+    'image',
+    'img',
+    'quote',
+    'blockquote',
+    'code',
+    'pageBreak',
+    'divider',
+    'hr',
+  ])
+  .or(z.string());
+
+const BlockSchema: z.ZodType<any> = z.lazy(() =>
+  z.object({
+    type: BlockTypeSchema.optional(),
+    style: BlockStyleSchema.optional(),
+    content: z
+      .union([
+        z.string(),
+        z.array(InlineItemSchema),
+        ListContentSchema,
+        TableContentSchema,
+        ImageContentSchema,
+        CodeContentSchema,
+      ])
+      .optional(),
+  })
+);
+
+const GlobalStyleSchema = z.object({
+  fontSize: z.string().optional(),
+  lineHeight: z.string().optional(),
+  fontFamily: z.string().optional(),
+});
+
+const PageConfigSchema = z.object({
+  size: z
+    .union([z.enum(['A4', 'Letter']), z.object({ width: z.number(), height: z.number() })])
+    .optional(),
+  orientation: z.enum(['portrait', 'landscape']).optional(),
+  margin: z
+    .object({
+      top: z.string().optional(),
+      right: z.string().optional(),
+      bottom: z.string().optional(),
+      left: z.string().optional(),
+    })
+    .optional(),
+});
+
+const DocumentMetaSchema = z.object({
+  title: z.string().optional(),
+  creator: z.string().optional(),
+  description: z.string().optional(),
+  subject: z.string().optional(),
+});
+
+const ParsedDataSchema = z.object({
+  blocks: z.array(BlockSchema).optional(),
+  globalStyle: GlobalStyleSchema.optional(),
+  page: PageConfigSchema.optional(),
+  meta: DocumentMetaSchema.optional(),
+});
+```
+
+> `TableCellSchema` 和 `BlockSchema` 使用了 `z.lazy`，因为 `TableCell` 的 `content` 可能包含 `InlineItem[]`，而 `Block` 本身包含 `TableContent` 等子类型，存在间接循环引用。
+
 ### Block 类型说明
 
 | `block.type`           | HTML 渲染       | DOCX 渲染    | `content` 格式                                                                                 |
