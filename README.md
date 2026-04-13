@@ -33,7 +33,7 @@ const data = ref('{"blocks":[]');
 
 ```
 
-## [playground](https://github.com/wxwzl/doc-stream-renderer)
+## [playground](https://wxwzl.github.io//doc-stream-renderer/)
 
 ## 数据协议说明
 

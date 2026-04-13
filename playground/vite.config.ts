@@ -4,6 +4,7 @@ import vue from '@vitejs/plugin-vue';
 import { resolve } from 'path';
 
 export default defineConfig({
+  base: '/doc-stream-renderer/',
   plugins: [react(), vue()],
   build: {
     outDir: 'dist',
