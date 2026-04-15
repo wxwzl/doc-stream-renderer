@@ -290,7 +290,8 @@ function renderCodeHtml(
   const code = content.code || '';
   const lang = content.language || '';
   const lineHeight = blockStyle?.lineHeight || globalStyle.lineHeight || '1.6';
-  const style = `background:#f4f4f4;padding:12px;border-radius:4px;overflow-x:auto;font-family:'Courier New',monospace;font-size:${globalStyle.fontSize || '14px'};line-height:${lineHeight};white-space:pre-wrap;`;
+  const fontSize = blockStyle?.fontSize || globalStyle.fontSize || '14px';
+  const style = `background:#f4f4f4;padding:12px;border-radius:4px;overflow-x:auto;font-family:'Courier New',monospace;font-size:${fontSize};line-height:${lineHeight};white-space:pre-wrap;`;
   return `<pre style="${style}"><code class="language-${escapeHtml(lang)}">${escapeHtml(code)}</code></pre>`;
 }
 
@@ -554,7 +555,7 @@ export function cellWidth(
   return undefined;
 }
 
-function buildCellSpacing(globalStyle: GlobalStyle, blockStyle: BlockStyle = {}) {
+function buildParagraphSpacing(globalStyle: GlobalStyle, blockStyle: BlockStyle = {}) {
   const spacing: {
     before: number;
     after: number;
@@ -580,7 +581,7 @@ function buildCellSpacing(globalStyle: GlobalStyle, blockStyle: BlockStyle = {})
       }
     }
   }
-  if (spacing.line && !spacing.lineRule) {
+  if (spacing.line && !spacing.lineRule && lh) {
     const num = parseFloat(lh);
     if (!Number.isNaN(num)) {
       const baseFontSizePt =
@@ -597,7 +598,7 @@ function createDocxTable(
   globalStyle: GlobalStyle,
   blockStyle: BlockStyle = {}
 ): docx.Table {
-  const tableCellSpacing = buildCellSpacing(globalStyle, blockStyle);
+  const tableCellSpacing = buildParagraphSpacing(globalStyle, blockStyle);
   const rows = (content.rows || []).map(
     row =>
       new docx.TableRow({
@@ -720,43 +721,9 @@ export async function generateDocxBlob(jsonStr: string): Promise<Blob> {
       const type = block.type;
       const content = block.content;
 
-      const commonSpacing: {
-        before: number;
-        after: number;
-        line: number;
-        lineRule?: typeof docx.LineRuleType.EXACT;
-      } = {
-        before: twipsFromSize(style.marginTop),
-        after: twipsFromSize(style.marginBottom),
-        line: 400,
-      };
-
-      const lh = style.lineHeight || globalStyle.lineHeight;
-      if (lh) {
-        const trimmed = lh.trim();
-        if (/^[\d.]+(px|pt|em)$/i.test(trimmed)) {
-          const baseFontSizePt = resolveLength(style.fontSize || globalStyle.fontSize);
-          const pt = resolveLength(trimmed, baseFontSizePt);
-          commonSpacing.line = Math.round(pt * 20);
-          commonSpacing.lineRule = docx.LineRuleType.EXACT;
-        } else {
-          const num = parseFloat(trimmed);
-          if (!Number.isNaN(num)) {
-            commonSpacing.line = Math.round(num * 240);
-          }
-        }
-      }
-
-      // 统一把倍数行高转成基于实际字号的固定行高，确保 Word 与 HTML 显示一致
-      if (commonSpacing.line && !commonSpacing.lineRule) {
-        const num = parseFloat(lh);
-        if (!Number.isNaN(num)) {
-          const baseFontSizePt =
-            resolveLength(style.fontSize || globalStyle.fontSize) || DEFAULT_FONT_SIZE_PT;
-          commonSpacing.line = Math.round(baseFontSizePt * num * 20);
-          commonSpacing.lineRule = docx.LineRuleType.EXACT;
-        }
-      }
+      const commonSpacing = buildParagraphSpacing(globalStyle, style);
+      commonSpacing.before = twipsFromSize(style.marginTop);
+      commonSpacing.after = twipsFromSize(style.marginBottom);
 
       const paragraphShading = style.backgroundColor
         ? { fill: normalizeHexColor(style.backgroundColor) }
@@ -1006,7 +973,7 @@ export async function generateDocxBlob(jsonStr: string): Promise<Blob> {
     const listRunSize = halfPointFromSize(globalStyle.fontSize);
     const listRunFont = globalStyle.fontFamily;
 
-    const headingBaseSpacing = buildCellSpacing(globalStyle);
+    const headingBaseSpacing = buildParagraphSpacing(globalStyle);
     const headingRunSize = halfPointFromSize(globalStyle.fontSize);
     const headingRunFont = globalStyle.fontFamily;
     const headingStyles = [
