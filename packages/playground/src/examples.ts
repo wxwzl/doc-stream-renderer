@@ -553,9 +553,6 @@ export const examples = {
             },
           },
           {
-            type: 'pageBreak',
-          },
-          {
             type: 'h2',
             content: '7. 图片与环绕方式',
             style: {

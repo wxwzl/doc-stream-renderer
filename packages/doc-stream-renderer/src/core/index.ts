@@ -459,61 +459,77 @@ function createTextRuns(
     size ? halfPointFromSize(size) : halfPointFromSize(globalStyle.fontSize);
 
   if (Array.isArray(content)) {
-    return content.map((c: InlineItem) => {
+    return content.flatMap((c: InlineItem) => {
       const s = c.style || {};
-      const runConfig: MutableTextRunOptions = {
-        text: c.text || '',
-        bold: s.fontWeight === 'bold',
-        italics: s.fontStyle === 'italic',
-        size: resolveSize(s.fontSize),
-        color:
-          resolveColor(s.color) || resolveColor(blockStyle.color) || resolveColor(defaultColor),
-        font: resolveFont(),
-      };
-      if (s.textDecoration === 'underline') {
-        runConfig.underline = { type: docx.UnderlineType.SINGLE };
-      } else if (s.textDecoration === 'line-through') {
-        runConfig.strike = true;
+      // 将文本中的 \n 拆分为多个 TextRun，防止 Word 把 <w:t> 中的换行符渲染成软回车（导致多出空行）
+      const lines = (c.text || '').split('\n');
+      // 去掉末尾因 \n 产生的空项，避免在 Word 中多出一行空白
+      while (lines.length > 0 && lines[lines.length - 1] === '') {
+        lines.pop();
       }
-      if (s.backgroundColor) {
-        runConfig.shading = { fill: normalizeHexColor(s.backgroundColor) };
-      }
-      if (s.verticalAlign === 'super') {
-        runConfig.superScript = true;
-      } else if (s.verticalAlign === 'sub') {
-        runConfig.subScript = true;
-      }
-      if (s.letterSpacing) {
-        const currentFontSizePt =
-          resolveLength(s.fontSize) ||
-          resolveLength(blockStyle.fontSize) ||
-          resolveLength(globalStyle.fontSize) ||
-          DEFAULT_FONT_SIZE_PT;
-        const lsPt = resolveLength(s.letterSpacing, currentFontSizePt);
-        if (!Number.isNaN(lsPt)) {
-          runConfig.characterSpacing = Math.round(lsPt * 20);
+      return lines.map((line, i) => {
+        const runConfig: MutableTextRunOptions = {
+          text: line,
+          bold: s.fontWeight === 'bold',
+          italics: s.fontStyle === 'italic',
+          size: resolveSize(s.fontSize),
+          color:
+            resolveColor(s.color) || resolveColor(blockStyle.color) || resolveColor(defaultColor),
+          font: resolveFont(),
+          break: i > 0 ? 1 : undefined,
+        };
+        if (s.textDecoration === 'underline') {
+          runConfig.underline = { type: docx.UnderlineType.SINGLE };
+        } else if (s.textDecoration === 'line-through') {
+          runConfig.strike = true;
         }
-      }
-      if (s.highlight) {
-        runConfig.highlight = s.highlight as never;
-      }
+        if (s.backgroundColor) {
+          runConfig.shading = { fill: normalizeHexColor(s.backgroundColor) };
+        }
+        if (s.verticalAlign === 'super') {
+          runConfig.superScript = true;
+        } else if (s.verticalAlign === 'sub') {
+          runConfig.subScript = true;
+        }
+        if (s.letterSpacing) {
+          const currentFontSizePt =
+            resolveLength(s.fontSize) ||
+            resolveLength(blockStyle.fontSize) ||
+            resolveLength(globalStyle.fontSize) ||
+            DEFAULT_FONT_SIZE_PT;
+          const lsPt = resolveLength(s.letterSpacing, currentFontSizePt);
+          if (!Number.isNaN(lsPt)) {
+            runConfig.characterSpacing = Math.round(lsPt * 20);
+          }
+        }
+        if (s.highlight) {
+          runConfig.highlight = s.highlight as never;
+        }
 
-      const textRun = new docx.TextRun(runConfig);
-      if (c.href) {
-        return new docx.ExternalHyperlink({ children: [textRun], link: c.href });
-      }
-      return textRun;
+        const textRun = new docx.TextRun(runConfig);
+        if (c.href) {
+          return new docx.ExternalHyperlink({ children: [textRun], link: c.href });
+        }
+        return textRun;
+      });
     });
   }
   const text = typeof content === 'string' ? content : (content as InlineItem)?.text || '';
-  const runConfig: MutableTextRunOptions = {
-    text,
+  // 同样将字符串中的 \n 拆分为多个 TextRun，避免 Word 中出现多余的软回车
+  const lines = text.split('\n');
+  // 去掉末尾因 \n 产生的空项，避免在 Word 中多出一行空白
+  while (lines.length > 0 && lines[lines.length - 1] === '') {
+    lines.pop();
+  }
+  const runConfigBase: MutableTextRunOptions = {
     bold: blockStyle.fontWeight === 'bold',
     size: resolveSize(blockStyle.fontSize),
     color: resolveColor(blockStyle.color) || resolveColor(defaultColor),
     font: resolveFont(),
   };
-  return [new docx.TextRun(runConfig)];
+  return lines.map(
+    (line, i) => new docx.TextRun({ ...runConfigBase, text: line, break: i > 0 ? 1 : undefined })
+  );
 }
 
 function base64ToUint8Array(base64: string): Uint8Array {
@@ -886,6 +902,10 @@ export async function generateDocxBlob(jsonStr: string): Promise<Blob> {
             : { code: typeof content === 'string' ? content : '' };
         const codeText = codeObj.code || '';
         const lines = codeText.split('\n');
+        // 去掉末尾因 \n 产生的空项，避免在 Word 中多出一行空白
+        while (lines.length > 0 && lines[lines.length - 1] === '') {
+          lines.pop();
+        }
         const codeRuns = lines.map(
           (line, i) =>
             new docx.TextRun({
