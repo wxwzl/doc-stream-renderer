@@ -13,6 +13,7 @@
             v-for="(ex, key) in examples"
             :key="key"
             class="sidebar-item"
+            :class="{ active: activeKey === key }"
             @click="loadExample(key)"
           >
             <span class="sidebar-item-name">{{ ex.name }}</span>
@@ -76,8 +77,16 @@
   import { DocStreamRenderer, generateDocxBlob } from 'doc-stream-renderer/vue';
   import { examples } from '../examples';
 
-  const stream = ref(examples.basic.data);
+  const getInitialKey = () => {
+    const params = new URLSearchParams(window.location.search);
+    const key = params.get('example');
+    return key && key in examples ? key : 'basic';
+  };
+
+  const initialKey = getInitialKey();
+  const stream = ref(examples[initialKey as keyof typeof examples].data);
   const isStreaming = ref(false);
+  const activeKey = ref(initialKey);
   let streamingInterval: ReturnType<typeof setInterval> | null = null;
 
   const stopStreaming = () => {
@@ -106,8 +115,16 @@
     }, delay);
   };
 
+  const updateUrl = (key: string) => {
+    const url = new URL(window.location.href);
+    url.searchParams.set('example', key);
+    window.history.replaceState({}, '', url);
+  };
+
   const loadExample = (key: string) => {
     stopStreaming();
+    activeKey.value = key;
+    updateUrl(key);
 
     if (key === 'incomplete') {
       startCharStreaming(examples.incomplete.data);

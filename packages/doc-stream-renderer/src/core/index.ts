@@ -282,10 +282,15 @@ function renderImageHtml(content: ImageContent): string {
   return `<img src="${escapeHtml(src)}" style="${styleParts.join('')}" />`;
 }
 
-function renderCodeHtml(content: CodeContent, globalStyle: GlobalStyle): string {
+function renderCodeHtml(
+  content: CodeContent,
+  globalStyle: GlobalStyle,
+  blockStyle?: BlockStyle
+): string {
   const code = content.code || '';
   const lang = content.language || '';
-  const style = `background:#f4f4f4;padding:12px;border-radius:4px;overflow-x:auto;font-family:'Courier New',monospace;font-size:${globalStyle.fontSize || '14px'};line-height:1.6;white-space:pre-wrap;`;
+  const lineHeight = blockStyle?.lineHeight || globalStyle.lineHeight || '1.6';
+  const style = `background:#f4f4f4;padding:12px;border-radius:4px;overflow-x:auto;font-family:'Courier New',monospace;font-size:${globalStyle.fontSize || '14px'};line-height:${lineHeight};white-space:pre-wrap;`;
   return `<pre style="${style}"><code class="language-${escapeHtml(lang)}">${escapeHtml(code)}</code></pre>`;
 }
 
@@ -375,7 +380,7 @@ export function getHtmlFromStream(rawStr: string): string {
             typeof content === 'object' && content !== null && 'code' in content
               ? (content as CodeContent)
               : { code: Array.isArray(content) ? '' : (content as string) || '' };
-          return `<div style="margin:0;${styleStr}">${renderCodeHtml(codeContent, globalStyle)}</div>`;
+          return `<div style="margin:0;${styleStr}">${renderCodeHtml(codeContent, globalStyle, block.style || {})}</div>`;
         }
 
         // pageBreak
@@ -461,7 +466,7 @@ function createTextRuns(
         italics: s.fontStyle === 'italic',
         size: resolveSize(s.fontSize),
         color:
-          resolveColor(s.color) || resolveColor(defaultColor) || resolveColor(blockStyle.color),
+          resolveColor(s.color) || resolveColor(blockStyle.color) || resolveColor(defaultColor),
         font: resolveFont(),
       };
       if (s.textDecoration === 'underline') {
@@ -504,7 +509,7 @@ function createTextRuns(
     text,
     bold: blockStyle.fontWeight === 'bold',
     size: resolveSize(blockStyle.fontSize),
-    color: resolveColor(defaultColor) || resolveColor(blockStyle.color),
+    color: resolveColor(blockStyle.color) || resolveColor(defaultColor),
     font: resolveFont(),
   };
   return [new docx.TextRun(runConfig)];
@@ -549,7 +554,50 @@ export function cellWidth(
   return undefined;
 }
 
-function createDocxTable(content: TableContent, globalStyle: GlobalStyle): docx.Table {
+function buildCellSpacing(globalStyle: GlobalStyle, blockStyle: BlockStyle = {}) {
+  const spacing: {
+    before: number;
+    after: number;
+    line: number;
+    lineRule?: typeof docx.LineRuleType.EXACT;
+  } = {
+    before: 0,
+    after: 0,
+    line: 400,
+  };
+  const lh = blockStyle.lineHeight || globalStyle.lineHeight;
+  if (lh) {
+    const trimmed = lh.trim();
+    if (/^[\d.]+(px|pt|em)$/i.test(trimmed)) {
+      const baseFontSizePt = resolveLength(blockStyle.fontSize || globalStyle.fontSize);
+      const pt = resolveLength(trimmed, baseFontSizePt);
+      spacing.line = Math.round(pt * 20);
+      spacing.lineRule = docx.LineRuleType.EXACT;
+    } else {
+      const num = parseFloat(trimmed);
+      if (!Number.isNaN(num)) {
+        spacing.line = Math.round(num * 240);
+      }
+    }
+  }
+  if (spacing.line && !spacing.lineRule) {
+    const num = parseFloat(lh);
+    if (!Number.isNaN(num)) {
+      const baseFontSizePt =
+        resolveLength(blockStyle.fontSize || globalStyle.fontSize) || DEFAULT_FONT_SIZE_PT;
+      spacing.line = Math.round(baseFontSizePt * num * 20);
+      spacing.lineRule = docx.LineRuleType.EXACT;
+    }
+  }
+  return spacing;
+}
+
+function createDocxTable(
+  content: TableContent,
+  globalStyle: GlobalStyle,
+  blockStyle: BlockStyle = {}
+): docx.Table {
+  const tableCellSpacing = buildCellSpacing(globalStyle, blockStyle);
   const rows = (content.rows || []).map(
     row =>
       new docx.TableRow({
@@ -567,6 +615,7 @@ function createDocxTable(content: TableContent, globalStyle: GlobalStyle): docx.
                   ? createTextRuns(cell.content, globalStyle, {})
                   : createTextRuns(cell.content || '', globalStyle, {}),
                 alignment: cellAlign,
+                spacing: tableCellSpacing,
               }),
             ],
             columnSpan: cell.colSpan,
@@ -698,6 +747,17 @@ export async function generateDocxBlob(jsonStr: string): Promise<Blob> {
         }
       }
 
+      // 统一把倍数行高转成基于实际字号的固定行高，确保 Word 与 HTML 显示一致
+      if (commonSpacing.line && !commonSpacing.lineRule) {
+        const num = parseFloat(lh);
+        if (!Number.isNaN(num)) {
+          const baseFontSizePt =
+            resolveLength(style.fontSize || globalStyle.fontSize) || DEFAULT_FONT_SIZE_PT;
+          commonSpacing.line = Math.round(baseFontSizePt * num * 20);
+          commonSpacing.lineRule = docx.LineRuleType.EXACT;
+        }
+      }
+
       const paragraphShading = style.backgroundColor
         ? { fill: normalizeHexColor(style.backgroundColor) }
         : undefined;
@@ -779,7 +839,7 @@ export async function generateDocxBlob(jsonStr: string): Promise<Blob> {
             ? (content as TableContent)
             : { rows: [] };
         if (tableContent.rows && tableContent.rows.length > 0) {
-          children.push(createDocxTable(tableContent, globalStyle));
+          children.push(createDocxTable(tableContent, globalStyle, style));
         }
         return;
       }
@@ -943,6 +1003,34 @@ export async function generateDocxBlob(jsonStr: string): Promise<Blob> {
       sectionProps.page.orientation = docx.PageOrientation.LANDSCAPE;
     }
 
+    const listRunSize = halfPointFromSize(globalStyle.fontSize);
+    const listRunFont = globalStyle.fontFamily;
+
+    const headingBaseSpacing = buildCellSpacing(globalStyle);
+    const headingRunSize = halfPointFromSize(globalStyle.fontSize);
+    const headingRunFont = globalStyle.fontFamily;
+    const headingStyles = [
+      'Heading1',
+      'Heading2',
+      'Heading3',
+      'Heading4',
+      'Heading5',
+      'Heading6',
+    ].map(id => ({
+      id,
+      name: id.replace('Heading', 'Heading '),
+      basedOn: 'Normal',
+      run: {
+        size: headingRunSize,
+        font: headingRunFont,
+        color: '000000',
+        bold: true,
+      },
+      paragraph: {
+        spacing: headingBaseSpacing,
+      },
+    }));
+
     const doc = new docx.Document({
       sections: [
         {
@@ -950,6 +1038,19 @@ export async function generateDocxBlob(jsonStr: string): Promise<Blob> {
           children,
         },
       ],
+      styles: {
+        paragraphStyles: [
+          ...headingStyles,
+          {
+            id: 'ListParagraph',
+            name: 'List Paragraph',
+            run: {
+              size: listRunSize,
+              font: listRunFont,
+            },
+          },
+        ],
+      },
       numbering: {
         config: [
           {
@@ -959,6 +1060,12 @@ export async function generateDocxBlob(jsonStr: string): Promise<Blob> {
               format: 'decimal',
               text: '%1.',
               alignment: docx.AlignmentType.START,
+              style: {
+                run: {
+                  size: listRunSize,
+                  font: listRunFont,
+                },
+              },
             })),
           },
         ],

@@ -2,9 +2,17 @@ import { useRef, useState } from 'react';
 import { DocStreamRenderer, generateDocxBlob } from 'doc-stream-renderer/react';
 import { examples } from '../examples';
 
+const getInitialKey = () => {
+  const params = new URLSearchParams(window.location.search);
+  const key = params.get('example');
+  return key && key in examples ? key : 'basic';
+};
+
 export default function App() {
-  const [stream, setStream] = useState(examples.basic.data);
+  const initialKey = getInitialKey();
+  const [stream, setStream] = useState(examples[initialKey as keyof typeof examples].data);
   const [isStreaming, setIsStreaming] = useState(false);
+  const [activeKey, setActiveKey] = useState<string>(initialKey);
 
   const streamingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -36,8 +44,16 @@ export default function App() {
     ); // 总时长约 1.5s，最少 2ms/字
   };
 
+  const updateUrl = (key: string) => {
+    const url = new URL(window.location.href);
+    url.searchParams.set('example', key);
+    window.history.replaceState({}, '', url);
+  };
+
   const loadExample = (key: string) => {
     stopStreaming();
+    setActiveKey(key);
+    updateUrl(key);
 
     if (key === 'incomplete') {
       startCharStreaming(examples.incomplete.data);
@@ -78,7 +94,11 @@ export default function App() {
           <h3 className="sidebar-title">示例模板</h3>
           <div className="sidebar-list">
             {Object.entries(examples).map(([key, ex]) => (
-              <div key={key} className="sidebar-item" onClick={() => loadExample(key)}>
+              <div
+                key={key}
+                className={`sidebar-item${activeKey === key ? ' active' : ''}`}
+                onClick={() => loadExample(key)}
+              >
                 <span className="sidebar-item-name">{ex.name}</span>
                 <span className="sidebar-item-desc">{ex.desc}</span>
               </div>
