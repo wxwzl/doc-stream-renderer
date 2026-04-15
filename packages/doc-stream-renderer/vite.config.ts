@@ -6,6 +6,10 @@ import dts from 'vite-plugin-dts';
 
 export default defineConfig({
   plugins: [vue(), react(), dts({ outDir: 'dist', staticImport: true, insertTypesEntry: true })],
+  test: {
+    environment: 'jsdom',
+    globals: true,
+  },
   build: {
     lib: {
       entry: {

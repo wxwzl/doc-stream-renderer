@@ -17,6 +17,9 @@ export type ParagraphBorders = {
 };
 export type MutablePartial<T> = { -readonly [K in keyof T]?: T[K] };
 
+const DEFAULT_FONT_SIZE_PX = 16;
+const DEFAULT_FONT_SIZE_PT = DEFAULT_FONT_SIZE_PX * 0.75; // 12pt
+
 export interface InlineStyle {
   fontWeight?: string;
   fontSize?: string;
@@ -398,19 +401,32 @@ export function getHtmlFromStream(rawStr: string): string {
 }
 
 // DOCX helpers
-function halfPointFromPx(pxStr: string | undefined, fallbackPt = 16): number {
-  if (!pxStr) return fallbackPt * 2;
-  const px = parseInt(pxStr, 10);
-  if (Number.isNaN(px)) return fallbackPt * 2;
-  // approximate 1px ≈ 0.75pt
-  return Math.round(px * 0.75 * 2);
+export function resolveLength(
+  cssValue: string | undefined,
+  basePt: number = DEFAULT_FONT_SIZE_PT
+): number {
+  if (!cssValue) return 0;
+  const trimmed = cssValue.trim().toLowerCase();
+  const num = parseFloat(trimmed);
+  if (Number.isNaN(num)) return 0;
+  if (trimmed.endsWith('pt')) return num;
+  if (trimmed.endsWith('px')) return num * 0.75;
+  if (trimmed.endsWith('em')) return num * basePt;
+  // 纯数字默认当作 pt（兼容现有隐式行为）
+  return num;
 }
 
-function twipsFromPx(pxStr: string | undefined): number {
-  if (!pxStr) return 0;
-  const px = parseInt(pxStr, 10);
-  if (Number.isNaN(px)) return 0;
-  return Math.round(px * 15);
+export function halfPointFromSize(
+  sizeStr: string | undefined,
+  fallbackPt = DEFAULT_FONT_SIZE_PT
+): number {
+  const pt = resolveLength(sizeStr, fallbackPt) || fallbackPt;
+  return Math.round(pt * 2);
+}
+
+export function twipsFromSize(sizeStr: string | undefined): number {
+  const pt = resolveLength(sizeStr);
+  return Math.round(pt * 20);
 }
 
 function normalizeHexColor(color?: string): string | undefined {
@@ -434,7 +450,7 @@ function createTextRuns(
   const resolveColor = (color?: string) => normalizeHexColor(color);
   const resolveFont = () => blockStyle.fontFamily || globalStyle.fontFamily;
   const resolveSize = (size?: string) =>
-    size ? halfPointFromPx(size) : halfPointFromPx(globalStyle.fontSize);
+    size ? halfPointFromSize(size) : halfPointFromSize(globalStyle.fontSize);
 
   if (Array.isArray(content)) {
     return content.map((c: InlineItem) => {
@@ -462,9 +478,14 @@ function createTextRuns(
         runConfig.subScript = true;
       }
       if (s.letterSpacing) {
-        const lsPx = parseInt(s.letterSpacing, 10);
-        if (!Number.isNaN(lsPx)) {
-          runConfig.characterSpacing = lsPx * 20;
+        const currentFontSizePt =
+          resolveLength(s.fontSize) ||
+          resolveLength(blockStyle.fontSize) ||
+          resolveLength(globalStyle.fontSize) ||
+          DEFAULT_FONT_SIZE_PT;
+        const lsPt = resolveLength(s.letterSpacing, currentFontSizePt);
+        if (!Number.isNaN(lsPt)) {
+          runConfig.characterSpacing = Math.round(lsPt * 20);
         }
       }
       if (s.highlight) {
@@ -509,15 +530,17 @@ function cellVerticalAlign(align?: string): VerticalAlignValue {
   return docx.VerticalAlign.CENTER;
 }
 
-function cellWidth(width?: string | number): { size: number; type: WidthTypeValue } | undefined {
+export function cellWidth(
+  width?: string | number
+): { size: number; type: WidthTypeValue } | undefined {
   if (width === undefined) return undefined;
   if (typeof width === 'string') {
     if (width.endsWith('%')) {
       const pct = parseFloat(width);
       if (!Number.isNaN(pct)) return { size: pct, type: docx.WidthType.PERCENTAGE };
     }
-    const px = parseInt(width, 10);
-    if (!Number.isNaN(px)) return { size: px * 20, type: docx.WidthType.DXA };
+    const pt = resolveLength(width);
+    if (!Number.isNaN(pt) && pt > 0) return { size: Math.round(pt * 20), type: docx.WidthType.DXA };
   }
   if (typeof width === 'number') {
     if (width <= 100) return { size: width, type: docx.WidthType.PERCENTAGE };
@@ -567,11 +590,11 @@ function createDocxTable(content: TableContent, globalStyle: GlobalStyle): docx.
   });
 }
 
-function parseBorderStyle(borderStr?: string): docx.IBorderOptions | undefined {
+export function parseBorderStyle(borderStr?: string): docx.IBorderOptions | undefined {
   if (!borderStr) return undefined;
   const parts = borderStr.trim().split(/\s+/);
   if (parts.length < 3) return undefined;
-  const sizePx = parseInt(parts[0], 10);
+  const sizePt = resolveLength(parts[0]);
   const styleName = parts[1];
   const color = normalizeHexColor(parts[2]);
   let style: BorderStyleValue = docx.BorderStyle.SINGLE;
@@ -582,7 +605,7 @@ function parseBorderStyle(borderStr?: string): docx.IBorderOptions | undefined {
     color,
     space: 1,
     style,
-    size: Math.max(1, Math.round(sizePx * 6)),
+    size: Math.max(1, Math.round(sizePt * 8)),
   };
 }
 
@@ -648,15 +671,32 @@ export async function generateDocxBlob(jsonStr: string): Promise<Blob> {
       const type = block.type;
       const content = block.content;
 
-      const commonSpacing = {
-        before: twipsFromPx(style.marginTop),
-        after: twipsFromPx(style.marginBottom),
-        line: style.lineHeight
-          ? parseFloat(style.lineHeight) * 240
-          : globalStyle.lineHeight
-            ? parseFloat(globalStyle.lineHeight) * 240
-            : 400,
+      const commonSpacing: {
+        before: number;
+        after: number;
+        line: number;
+        lineRule?: typeof docx.LineRuleType.EXACT;
+      } = {
+        before: twipsFromSize(style.marginTop),
+        after: twipsFromSize(style.marginBottom),
+        line: 400,
       };
+
+      const lh = style.lineHeight || globalStyle.lineHeight;
+      if (lh) {
+        const trimmed = lh.trim();
+        if (/^[\d.]+(px|pt|em)$/i.test(trimmed)) {
+          const baseFontSizePt = resolveLength(style.fontSize || globalStyle.fontSize);
+          const pt = resolveLength(trimmed, baseFontSizePt);
+          commonSpacing.line = Math.round(pt * 20);
+          commonSpacing.lineRule = docx.LineRuleType.EXACT;
+        } else {
+          const num = parseFloat(trimmed);
+          if (!Number.isNaN(num)) {
+            commonSpacing.line = Math.round(num * 240);
+          }
+        }
+      }
 
       const paragraphShading = style.backgroundColor
         ? { fill: normalizeHexColor(style.backgroundColor) }
@@ -664,7 +704,7 @@ export async function generateDocxBlob(jsonStr: string): Promise<Blob> {
 
       const paragraphIndent: MutablePartial<docx.IIndentAttributesProperties> = {};
       if (style.textIndent) {
-        paragraphIndent.firstLine = twipsFromPx(style.textIndent);
+        paragraphIndent.firstLine = twipsFromSize(style.textIndent);
       }
       const finalIndent =
         Object.keys(paragraphIndent).length > 0
@@ -803,7 +843,7 @@ export async function generateDocxBlob(jsonStr: string): Promise<Blob> {
             children: createTextRuns(content || '', globalStyle, style),
             alignment,
             spacing: commonSpacing,
-            indent: finalIndent || { left: twipsFromPx('16px') || 240 },
+            indent: finalIndent || { left: twipsFromSize('16px') || 240 },
             border: quoteBorder,
             shading: paragraphShading,
           })
@@ -824,7 +864,7 @@ export async function generateDocxBlob(jsonStr: string): Promise<Blob> {
             new docx.TextRun({
               text: line,
               font: 'Courier New',
-              size: halfPointFromPx(globalStyle.fontSize, 14),
+              size: halfPointFromSize(globalStyle.fontSize, 14),
               break: i > 0 ? 1 : undefined,
             })
         );
@@ -892,10 +932,10 @@ export async function generateDocxBlob(jsonStr: string): Promise<Blob> {
       page: {
         size: pageSizeConfig(page?.size),
         margin: {
-          top: twipsFromPx(page?.margin?.top) || 1440,
-          right: twipsFromPx(page?.margin?.right) || 1440,
-          bottom: twipsFromPx(page?.margin?.bottom) || 1440,
-          left: twipsFromPx(page?.margin?.left) || 1440,
+          top: twipsFromSize(page?.margin?.top) || 1440,
+          right: twipsFromSize(page?.margin?.right) || 1440,
+          bottom: twipsFromSize(page?.margin?.bottom) || 1440,
+          left: twipsFromSize(page?.margin?.left) || 1440,
         },
       },
     };

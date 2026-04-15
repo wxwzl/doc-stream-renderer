@@ -788,6 +788,178 @@ export const examples = {
     desc: '不完整的 JSON（模拟 LLM 流式输出）',
     data: `{"globalStyle":{"fontSize":"16px","lineHeight":"1.8","fontFamily":"Microsoft YaHei, sans-serif"},"blocks":[{"type":"h1","content":"2025 年度产品战略规划（实时生成中）","style":{"textAlign":"center","fontWeight":"bold","fontSize":"24px","marginBottom":"20px"}},{"type":"p","content":[{"text":"编制日期：","style":{"fontWeight":"bold"}},{"text":"2026年4月13日"}]},{"type":"p","content":[{"text":"责任部门：","style":{"fontWeight":"bold"}},{"text":"产品战略部 · 增长与商业化中心"}]},{"type":"h2","content":"一、市场洞察与机会分析","style":{"fontWeight":"bold","fontSize":"18px","marginTop":"20px","marginBottom":"10px"}},{"type":"p","content":"随着 AI 技术的快速演进，企业级文档处理市场正经历着前所未有的变革。用户需求从单一的格式转换，逐步转向以流式渲染、实时协作为核心的智能文档体验。"},{"type":"p","content":"我们的核心竞争优势在于："},{"type":"ul","content":{"items":['底层自研的流式 JSON 协议，支持在任意截断状态下安全渲染','跨框架（React / Vue 3）组件复用，降低客户接入成本','基于 Web Worker 的异步文档生成，保障大文件场景下的主线程流畅性']}},{"type":"h2","content":"二、年度核心目标","style":{"fontWeight":"bold","fontSize":"18px","marginTop":"20px","marginBottom":"10px"}},{"type":"p","content":"围绕“体验升级、生态开放、商业闭环”三大关键词，我们制定了以下年度目标："},{"type":"ol","content":{"items":['Q1-Q2：完成流式渲染引擎 2.0 升级，支持表格、图片、分页符等复杂元素','Q2-Q3：上线开放平台与插件市场，引入第三方开发者共建生态','Q3-Q4：商业化产品矩阵落地，实现年度经常性收入（ARR）增长 150%']}},{"type":"h2","content":"三、关键举措与里程碑","style":{"fontWeight":"bold","fontSize":"18px","marginTop":"20px","marginBottom":"10px"}},{"type":"p","content":"为确保战略目标的达成，我们将在技术研发、市场拓展和组织建设三方面同步发力。`,
   },
+  units: {
+    name: 'pt / em 单位演示',
+    desc: '展示 pt、em 单位在字号、间距、行高、表格宽度中的效果',
+    data: JSON.stringify(
+      {
+        globalStyle: {
+          fontSize: '14pt',
+          lineHeight: '1.6',
+          fontFamily: 'Microsoft YaHei, sans-serif',
+        },
+        page: {
+          size: 'A4',
+          orientation: 'portrait',
+          margin: {
+            top: '72pt',
+            right: '72pt',
+            bottom: '72pt',
+            left: '72pt',
+          },
+        },
+        blocks: [
+          {
+            type: 'h1',
+            content: 'pt / em 单位支持演示',
+            style: {
+              textAlign: 'center',
+              fontWeight: 'bold',
+              fontSize: '24pt',
+              marginBottom: '1em',
+            },
+          },
+          {
+            type: 'p',
+            content: [
+              { text: '本页全局字号设置为 14pt。' },
+              {
+                text: '这行文字是 1.5em（21pt）',
+                style: { fontSize: '1.5em', color: '#1890ff' },
+              },
+              { text: '，相对于全局字号自动放大。' },
+            ],
+            style: {
+              marginTop: '1em',
+              marginBottom: '1em',
+            },
+          },
+          {
+            type: 'p',
+            content: [
+              { text: '字间距 0.2em（2.8pt）', style: { letterSpacing: '0.2em' } },
+              { text: ' vs ' },
+              { text: '字间距 0.5em（7pt）', style: { letterSpacing: '0.5em', color: '#e74c3c' } },
+            ],
+            style: {
+              marginBottom: '1em',
+            },
+          },
+          {
+            type: 'h2',
+            content: '1. 行高测试',
+            style: {
+              fontWeight: 'bold',
+              fontSize: '16pt',
+              marginTop: '1.5em',
+              marginBottom: '0.5em',
+            },
+          },
+          {
+            type: 'p',
+            content:
+              '本段行高设置为 18pt，确保在多行文本时具有固定的垂直间距。即使在不同字号下，行高也能精确控制，不会随倍数浮动。',
+            style: {
+              fontSize: '12pt',
+              lineHeight: '18pt',
+              marginBottom: '1em',
+            },
+          },
+          {
+            type: 'p',
+            content: '本段则使用倍数行高 1.8，与全局 lineHeight 保持一致。',
+            style: {
+              fontSize: '12pt',
+              marginBottom: '1em',
+            },
+          },
+          {
+            type: 'h2',
+            content: '2. 段落边距与缩进',
+            style: {
+              fontWeight: 'bold',
+              fontSize: '16pt',
+              marginTop: '1.5em',
+              marginBottom: '0.5em',
+            },
+          },
+          {
+            type: 'p',
+            content:
+              '本段落设置了首行缩进 2em（以当前 14pt 为基准即 28pt），以及上下边距 0.8em。左侧还有一条 3pt 宽的蓝色边框。',
+            style: {
+              textIndent: '2em',
+              marginTop: '0.8em',
+              marginBottom: '0.8em',
+              paddingLeft: '1em',
+              borderLeft: '3pt solid #1890ff',
+            },
+          },
+          {
+            type: 'h2',
+            content: '3. 表格宽度支持 em/pt',
+            style: {
+              fontWeight: 'bold',
+              fontSize: '16pt',
+              marginTop: '1.5em',
+              marginBottom: '0.5em',
+            },
+          },
+          {
+            type: 'table',
+            content: {
+              rows: [
+                {
+                  cells: [
+                    { content: '单位', width: '30%', textAlign: 'center' },
+                    { content: '示例值', width: '35%', textAlign: 'center' },
+                    { content: '说明', width: '35%', textAlign: 'center' },
+                  ],
+                },
+                {
+                  cells: [
+                    { content: 'pt', textAlign: 'center' },
+                    { content: '72pt', textAlign: 'center' },
+                    { content: '绝对单位，直接映射到 Word 内部尺寸' },
+                  ],
+                },
+                {
+                  cells: [
+                    { content: 'em', textAlign: 'center' },
+                    { content: '2em', textAlign: 'center' },
+                    { content: '相对当前字体大小，自动换算' },
+                  ],
+                },
+                {
+                  cells: [
+                    { content: 'px', textAlign: 'center' },
+                    { content: '16px', textAlign: 'center' },
+                    { content: '按 1px = 0.75pt 近似换算' },
+                  ],
+                },
+              ],
+            },
+          },
+          {
+            type: 'p',
+            content: [
+              {
+                text: '以上演示了 pt、em、px 在 doc-stream-renderer 中的综合应用。',
+                style: { fontWeight: 'bold' },
+              },
+            ],
+            style: {
+              textAlign: 'center',
+              marginTop: '1.5em',
+              color: '#666',
+            },
+          },
+        ],
+      },
+      null,
+      2
+    ),
+  },
   streaming: {
     name: '动态流式演示',
     desc: '点击后开始模拟流式生成',
