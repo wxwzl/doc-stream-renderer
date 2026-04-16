@@ -21,15 +21,7 @@ export default defineConfig({
       fileName: (format, entryName) => `${entryName}.${format}.js`,
     },
     rollupOptions: {
-      external: [
-        'vue',
-        'react',
-        'react/jsx-runtime',
-        'react-dom',
-        'docx',
-        'partial-json',
-        'lodash-es',
-      ],
+      external: ['vue', 'react', 'react/jsx-runtime', 'react-dom', 'docx', 'partial-json'],
       output: {
         globals: {
           vue: 'Vue',
