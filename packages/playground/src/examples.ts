@@ -957,6 +957,84 @@ export const examples = {
       2
     ),
   },
+  nestedList: {
+    name: '多级有序列表',
+    desc: '展示 1. / 1.1. / 1.1.1. 层级编号',
+    data: JSON.stringify(
+      {
+        globalStyle: {
+          fontSize: '14px',
+          lineHeight: '1.8',
+          fontFamily: 'Microsoft YaHei, sans-serif',
+        },
+        blocks: [
+          {
+            type: 'h1',
+            content: '多级有序列表演示',
+            style: {
+              textAlign: 'center',
+              fontWeight: 'bold',
+              fontSize: '22px',
+              marginBottom: '20px',
+            },
+          },
+          {
+            type: 'p',
+            content: '以下展示了 DOCX 导出时支持的多级有序列表编号效果：',
+          },
+          {
+            type: 'ol',
+            content: {
+              items: ['一级项目 1'],
+              level: 0,
+            },
+          },
+          {
+            type: 'ol',
+            content: {
+              items: ['二级项目 1.1'],
+              level: 1,
+              indent: '48px',
+            },
+          },
+          {
+            type: 'ol',
+            content: {
+              items: ['三级项目 1.1.1', '三级项目 1.1.2'],
+              level: 2,
+              indent: '72px',
+            },
+          },
+          {
+            type: 'ol',
+            content: {
+              items: ['二级项目 1.2'],
+              level: 1,
+              indent: '48px',
+            },
+          },
+          {
+            type: 'ol',
+            content: {
+              items: ['一级项目 2'],
+              level: 0,
+            },
+          },
+          {
+            type: 'p',
+            content:
+              '在 Word 文档和 HTML 预览中，各级编号会正确显示为 1. / 1.1. / 1.1.1. 样式。同时支持通过 content.indent 自定义缩进距离。',
+            style: {
+              marginTop: '10px',
+              color: '#666',
+            },
+          },
+        ],
+      },
+      null,
+      2
+    ),
+  },
   streaming: {
     name: '动态流式演示',
     desc: '点击后开始模拟流式生成',

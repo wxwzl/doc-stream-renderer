@@ -53,7 +53,7 @@ function createTextRuns(
   const resolveColor = (color?: string) => normalizeHexColor(color);
   const resolveFont = () => blockStyle.fontFamily || globalStyle.fontFamily;
   const resolveSize = (size?: string) =>
-    size ? halfPointFromSize(size) : halfPointFromSize(globalStyle.fontSize);
+    size ? halfPointFromSize(size) : halfPointFromSize(blockStyle.fontSize || globalStyle.fontSize);
 
   if (isArray(content)) {
     return content.flatMap((c: InlineItem) => {
@@ -305,6 +305,11 @@ function renderListDocx(block: Block, globalStyle: GlobalStyle): BlockRenderResu
   const listObj = isObject<ListContent>(content) && 'items' in content ? content : { items: [] };
   const items = listObj.items || [];
   const level = Math.min(Math.max(listObj.level || 0, 0), 9);
+  const listIndentStr = listObj.indent || style.paddingLeft;
+  const listIndentTwips = listIndentStr ? twipsFromSize(listIndentStr) : 0;
+  const indent = listIndentTwips
+    ? { left: listIndentTwips, hanging: Math.round(listIndentTwips / 2) }
+    : ctx.indent;
   return items.map(
     (text: string) =>
       new docx.Paragraph({
@@ -314,7 +319,7 @@ function renderListDocx(block: Block, globalStyle: GlobalStyle): BlockRenderResu
         alignment: ctx.alignment,
         spacing: ctx.spacing,
         shading: ctx.shading,
-        indent: ctx.indent,
+        indent,
         border: ctx.border,
       })
   );
@@ -597,18 +602,27 @@ export async function generateDocxBlob(jsonStr: string): Promise<Blob> {
         config: [
           {
             reference: 'main-num',
-            levels: Array.from({ length: 10 }).map((_, i) => ({
-              level: i,
-              format: 'decimal',
-              text: '%1.',
-              alignment: docx.AlignmentType.START,
-              style: {
-                run: {
-                  size: listRunSize,
-                  font: listRunFont,
+            levels: Array.from({ length: 10 }).map((_, i) => {
+              const parts = Array.from({ length: i + 1 }, (_, idx) => `%${idx + 1}`);
+              return {
+                level: i,
+                format: 'decimal',
+                text: `${parts.join('.')}.`,
+                alignment: docx.AlignmentType.START,
+                style: {
+                  run: {
+                    size: listRunSize,
+                    font: listRunFont,
+                  },
                 },
-              },
-            })),
+                paragraphProperties: {
+                  indent: {
+                    left: 720 * (i + 1),
+                    hanging: 360,
+                  },
+                },
+              };
+            }),
           },
         ],
       },

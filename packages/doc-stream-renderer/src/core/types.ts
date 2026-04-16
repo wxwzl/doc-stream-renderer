@@ -90,6 +90,7 @@ export interface CodeContent {
 export interface ListContent {
   items?: string[];
   level?: number;
+  indent?: string;
 }
 
 export type BlockContent =

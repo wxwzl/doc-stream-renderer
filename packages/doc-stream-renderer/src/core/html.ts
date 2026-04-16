@@ -139,16 +139,26 @@ function renderParagraphHtml(block: Block, globalStyle: GlobalStyle): string {
   return `<p style="margin:0;${styleStr}">${buildContentHtml(block.content)}</p>`;
 }
 
-function renderListHtml(block: Block, globalStyle: GlobalStyle): string {
+function renderListHtml(block: Block, globalStyle: GlobalStyle, olCounters: number[]): string {
   const type = block.type!;
   const styleStr = buildBlockStyle(block, globalStyle);
   const content = block.content;
   const listObj = isObject<ListContent>(content) && 'items' in content ? content : { items: [] };
   const items = listObj.items || [];
   const level = Math.max(0, Math.min(10, listObj.level || 0));
-  const indent = 24 + level * 24;
-  const itemsHtml = items.map((i: string) => `<li>${escapeHtml(i)}</li>`).join('');
-  return `<${type} style="margin:0;${styleStr};padding-left:${indent}px;">${itemsHtml}</${type}>`;
+  const indent = listObj.indent || block.style?.paddingLeft || `${24 + level * 24}px`;
+  const itemsHtml = items
+    .map((i: string) => {
+      if (type === 'ol') {
+        olCounters.length = level + 1;
+        olCounters[level] = (olCounters[level] || 0) + 1;
+        const prefix = olCounters.slice(0, level + 1).join('.') + '. ';
+        return `<li style="list-style:none;">${prefix}${escapeHtml(i)}</li>`;
+      }
+      return `<li>${escapeHtml(i)}</li>`;
+    })
+    .join('');
+  return `<${type} style="margin:0;${styleStr};padding-left:${indent};">${itemsHtml}</${type}>`;
 }
 
 function renderTableBlockHtml(block: Block, globalStyle: GlobalStyle): string {
@@ -212,6 +222,8 @@ export function getHtmlFromStream(rawStr: string): string {
     const blocks = data.blocks || [];
     const globalStyle = data.globalStyle || {};
 
+    const olCounters: number[] = [];
+
     return blocks
       .map((block: Block) => {
         const type = block.type;
@@ -232,7 +244,7 @@ export function getHtmlFromStream(rawStr: string): string {
             return renderParagraphHtml(block, globalStyle);
           case 'ol':
           case 'ul':
-            return renderListHtml(block, globalStyle);
+            return renderListHtml(block, globalStyle, olCounters);
           case 'table':
             return renderTableBlockHtml(block, globalStyle);
           case 'image':
