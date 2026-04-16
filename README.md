@@ -216,6 +216,7 @@ interface CodeContent {
 interface ListContent {
   items?: string[];
   level?: number;
+  indent?: string;
 }
 
 type BlockType =
@@ -362,31 +363,30 @@ const CodeContentSchema = z.object({
 const ListContentSchema = z.object({
   items: z.array(z.string()).optional(),
   level: z.number().optional(),
+  indent: z.string().optional(),
 });
 
-const BlockTypeSchema = z
-  .enum([
-    'h1',
-    'h2',
-    'h3',
-    'h4',
-    'h5',
-    'h6',
-    'p',
-    'paragraph',
-    'ul',
-    'ol',
-    'table',
-    'image',
-    'img',
-    'quote',
-    'blockquote',
-    'code',
-    'pageBreak',
-    'divider',
-    'hr',
-  ])
-  .or(z.string());
+const BlockTypeSchema = z.enum([
+  'h1',
+  'h2',
+  'h3',
+  'h4',
+  'h5',
+  'h6',
+  'p',
+  'paragraph',
+  'ul',
+  'ol',
+  'table',
+  'image',
+  'img',
+  'quote',
+  'blockquote',
+  'code',
+  'pageBreak',
+  'divider',
+  'hr',
+]);
 
 const BlockSchema: z.ZodType<any> = z.lazy(() =>
   z.object({
@@ -449,8 +449,8 @@ const ParsedDataSchema = z.object({
 | ---------------------- | --------------- | ------------ | ---------------------------------------------------------------------------------------------- |
 | `h1` ~ `h6`            | `<h1>` ~ `<h6>` | 标题级别 1~6 | `string` / `InlineItem[]`                                                                      |
 | `p` / `paragraph`      | `<p>`           | 普通段落     | `string` / `InlineItem[]`                                                                      |
-| `ul`                   | `<ul>`          | 项目符号列表 | `{ items: string[], level?: number }`                                                          |
-| `ol`                   | `<ol>`          | 编号列表     | `{ items: string[], level?: number }`                                                          |
+| `ul`                   | `<ul>`          | 项目符号列表 | `{ items: string[], level?: number, indent?: string }`                                         |
+| `ol`                   | `<ol>`          | 编号列表     | `{ items: string[], level?: number, indent?: string }`                                         |
 | `table`                | `<table>`       | 表格         | `{ rows: [{ cells: [{ content, colSpan?, rowSpan?, width?, textAlign?, verticalAlign? }] }] }` |
 | `image` / `img`        | `<img>`         | 图片         | `{ src: string, width?: number, height?: number, wrap?: string }`                              |
 | `quote` / `blockquote` | `<blockquote>`  | 左侧缩进段落 | `string` / `InlineItem[]`                                                                      |
@@ -604,6 +604,7 @@ const ParsedDataSchema = z.object({
 | `tableCell.textAlign`                                                       | 单元格文字水平对齐                                                                            |
 | `tableCell.verticalAlign`                                                   | 单元格文字垂直对齐：`top` / `middle` / `bottom`                                               |
 | `listContent.level`                                                         | 列表嵌套层级，支持 `0` ~ `9`                                                                  |
+| `listContent.indent`                                                        | 列表自定义缩进，如 `48px`，优先于 `block.style.paddingLeft`                                   |
 | `imageContent.wrap`                                                         | 图片环绕方式：`inline` / `square` / `tight` / `topAndBottom` / `behindText` / `inFrontOfText` |
 
 ---
