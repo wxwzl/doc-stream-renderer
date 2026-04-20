@@ -13,9 +13,16 @@ import type {
 import { escapeHtml, isArray, isNumber, isObject } from './utils';
 
 function buildContentHtml(content: unknown): string {
-  return isArray(content)
-    ? buildInlineHtml(content as InlineItem[])
-    : escapeHtml((content as string) || '');
+  if (isArray(content)) {
+    return buildInlineHtml(content as InlineItem[]);
+  }
+  if (typeof content === 'string') {
+    return escapeHtml(content);
+  }
+  if (content == null) {
+    return '';
+  }
+  return escapeHtml(String(content));
 }
 
 function buildInlineHtml(items: InlineItem[]): string {
@@ -35,7 +42,7 @@ function buildInlineHtml(items: InlineItem[]): string {
       ]
         .filter(Boolean)
         .join('; ');
-      const text = escapeHtml(item.text || '');
+      const text = escapeHtml(typeof item.text === 'string' ? item.text : String(item.text ?? ''));
       if (item.href) {
         return `<a href="${escapeHtml(item.href)}" style="${styles};text-decoration:underline;color:#1890ff;">${text}</a>`;
       }
@@ -151,6 +158,9 @@ function renderListHtml(block: Block, globalStyle: GlobalStyle, olCounters: numb
     .map((i: string) => {
       if (type === 'ol') {
         olCounters.length = level + 1;
+        for (let j = 0; j <= level; j++) {
+          if (olCounters[j] === undefined) olCounters[j] = 0;
+        }
         olCounters[level] = (olCounters[level] || 0) + 1;
         const prefix = olCounters.slice(0, level + 1).join('.') + '. ';
         return `<li style="list-style:none;">${prefix}${escapeHtml(i)}</li>`;
@@ -211,60 +221,91 @@ function renderFallbackHtml(block: Block, globalStyle: GlobalStyle): string {
   return `<div style="margin:0;${styleStr}">${buildContentHtml(block.content)}</div>`;
 }
 
+export function parseStream(rawStr: string): { blocks: Block[]; globalStyle: GlobalStyle } | null {
+  if (!rawStr) return null;
+  const data = parse(rawStr, Allow.ALL) as ParsedData | null;
+  if (!data || !isObject(data)) return null;
+  return {
+    blocks: data.blocks || [],
+    globalStyle: data.globalStyle || {},
+  };
+}
+
+export function computeOlCountersBeforeIndex(blocks: Block[], index: number): number[] {
+  const counters: number[] = [];
+  for (let i = 0; i < index; i++) {
+    const block = blocks[i];
+    if (block.type === 'ol') {
+      const content = block.content;
+      const listObj =
+        isObject<ListContent>(content) && 'items' in content ? content : { items: [] };
+      const items = listObj.items || [];
+      const level = Math.min(Math.max(listObj.level || 0, 0), 9);
+      counters.length = level + 1;
+      counters[level] = (counters[level] || 0) + items.length;
+    }
+  }
+  return counters;
+}
+
+export function renderBlocksHtml(
+  blocks: Block[],
+  globalStyle: GlobalStyle,
+  olCounters: number[]
+): string {
+  return blocks
+    .map((block: Block) => {
+      const type = block.type;
+      if (!type) {
+        return renderParagraphHtml(block, globalStyle);
+      }
+
+      switch (type) {
+        case 'h1':
+        case 'h2':
+        case 'h3':
+        case 'h4':
+        case 'h5':
+        case 'h6':
+          return renderHeadingHtml(block, globalStyle);
+        case 'p':
+        case 'paragraph':
+          return renderParagraphHtml(block, globalStyle);
+        case 'ol':
+        case 'ul':
+          return renderListHtml(block, globalStyle, olCounters);
+        case 'table':
+          return renderTableBlockHtml(block, globalStyle);
+        case 'image':
+        case 'img':
+          return renderImageBlockHtml(block, globalStyle);
+        case 'quote':
+        case 'blockquote':
+          return renderQuoteHtml(block, globalStyle);
+        case 'code':
+          return renderCodeBlockHtml(block, globalStyle);
+        case 'pageBreak':
+          return renderPageBreakHtml();
+        case 'divider':
+        case 'hr':
+          return renderDividerHtml();
+        default:
+          return renderFallbackHtml(block, globalStyle);
+      }
+    })
+    .join('');
+}
+
 /**
  * 预览 HTML 生成逻辑
  */
 export function getHtmlFromStream(rawStr: string): string {
   if (!rawStr) return '';
   try {
-    const data = parse(rawStr, Allow.ALL) as ParsedData | null;
-    if (!data || !isObject(data)) return '';
-    const blocks = data.blocks || [];
-    const globalStyle = data.globalStyle || {};
-
+    const parsed = parseStream(rawStr);
+    if (!parsed) return '';
     const olCounters: number[] = [];
-
-    return blocks
-      .map((block: Block) => {
-        const type = block.type;
-        if (!type) {
-          return renderParagraphHtml(block, globalStyle);
-        }
-
-        switch (type) {
-          case 'h1':
-          case 'h2':
-          case 'h3':
-          case 'h4':
-          case 'h5':
-          case 'h6':
-            return renderHeadingHtml(block, globalStyle);
-          case 'p':
-          case 'paragraph':
-            return renderParagraphHtml(block, globalStyle);
-          case 'ol':
-          case 'ul':
-            return renderListHtml(block, globalStyle, olCounters);
-          case 'table':
-            return renderTableBlockHtml(block, globalStyle);
-          case 'image':
-          case 'img':
-            return renderImageBlockHtml(block, globalStyle);
-          case 'quote':
-          case 'blockquote':
-            return renderQuoteHtml(block, globalStyle);
-          case 'code':
-            return renderCodeBlockHtml(block, globalStyle);
-          case 'pageBreak':
-            return renderPageBreakHtml();
-          case 'divider':
-          case 'hr':
-            return renderDividerHtml();
-          default:
-            return renderFallbackHtml(block, globalStyle);
-        }
-      })
-      .join('');
+    return renderBlocksHtml(parsed.blocks, parsed.globalStyle, olCounters);
   } catch (err) {
     console.error('[getHtmlFromStream] error:', err);
     return '';

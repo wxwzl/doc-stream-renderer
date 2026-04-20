@@ -37,5 +37,10 @@ export {
 } from './utils';
 
 // Re-export core functions
-export { getHtmlFromStream } from './html';
+export {
+  getHtmlFromStream,
+  parseStream,
+  renderBlocksHtml,
+  computeOlCountersBeforeIndex,
+} from './html';
 export { generateDocxBlob } from './docx';

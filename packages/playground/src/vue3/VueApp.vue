@@ -63,7 +63,15 @@
                 box-sizing: border-box;
               "
             >
-              <DocStreamRenderer :stream="stream" />
+              <DocStreamRenderer
+                :stream="stream"
+                auto-scroll
+                :style="
+                  activeKey === 'autoScroll'
+                    ? { maxHeight: '600px', overflow: 'auto', border: '1px solid #eee' }
+                    : undefined
+                "
+              />
             </div>
           </div>
         </section>
@@ -97,13 +105,13 @@
     }
   };
 
-  const startCharStreaming = (fullText: string) => {
+  const startCharStreaming = (fullText: string, durationMs = 8000, fixedDelay?: number) => {
     stopStreaming();
     stream.value = '';
     isStreaming.value = true;
 
     let index = 0;
-    const delay = Math.max(2, Math.floor(1500 / fullText.length));
+    const delay = fixedDelay ?? Math.max(5, Math.floor(durationMs / fullText.length));
 
     streamingInterval = setInterval(() => {
       if (index < fullText.length) {
@@ -132,7 +140,12 @@
     }
 
     if (key === 'streaming') {
-      startCharStreaming(examples.rich.data);
+      startCharStreaming(examples.streaming.data, 8000);
+      return;
+    }
+
+    if (key === 'autoScroll') {
+      startCharStreaming(examples.autoScroll.data, 20000, 4);
       return;
     }
 

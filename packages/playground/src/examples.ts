@@ -1037,7 +1037,503 @@ export const examples = {
   },
   streaming: {
     name: '动态流式演示',
-    desc: '点击后开始模拟流式生成',
-    data: '',
+    desc: '包含全部特性的流式生成',
+    data: JSON.stringify(
+      {
+        globalStyle: {
+          fontSize: '14px',
+          lineHeight: '1.8',
+          fontFamily: 'Microsoft YaHei, sans-serif',
+        },
+        page: {
+          size: 'A4',
+          orientation: 'portrait',
+          margin: {
+            top: '72pt',
+            right: '72pt',
+            bottom: '72pt',
+            left: '72pt',
+          },
+        },
+        meta: {
+          title: '流式演示文档',
+          creator: 'Doc Stream Renderer',
+          description: '包含全部特性的流式演示',
+        },
+        blocks: [
+          {
+            type: 'h1',
+            content: '流式文档渲染演示',
+            style: {
+              textAlign: 'center',
+              fontWeight: 'bold',
+              fontSize: '24px',
+              marginBottom: '20px',
+            },
+          },
+          {
+            type: 'h2',
+            content: '一、标题层级',
+            style: {
+              fontWeight: 'bold',
+              fontSize: '18px',
+              marginTop: '20px',
+              marginBottom: '10px',
+            },
+          },
+          { type: 'h3', content: '三级标题', style: { fontWeight: 'bold', fontSize: '16px' } },
+          { type: 'h4', content: '四级标题', style: { fontWeight: 'bold', fontSize: '14px' } },
+          { type: 'h5', content: '五级标题', style: { fontWeight: 'bold', fontSize: '13px' } },
+          { type: 'h6', content: '六级标题', style: { fontWeight: 'bold', fontSize: '12px' } },
+          {
+            type: 'h2',
+            content: '二、富文本样式',
+            style: {
+              fontWeight: 'bold',
+              fontSize: '18px',
+              marginTop: '20px',
+              marginBottom: '10px',
+            },
+          },
+          {
+            type: 'p',
+            content: [
+              { text: '这是普通文本。' },
+              { text: '加粗', style: { fontWeight: 'bold' } },
+              { text: '、' },
+              { text: '斜体', style: { fontStyle: 'italic' } },
+              { text: '、' },
+              { text: '下划线', style: { textDecoration: 'underline' } },
+              { text: '、' },
+              { text: '删除线', style: { textDecoration: 'line-through' } },
+              { text: '、' },
+              { text: '红色文字', style: { color: '#e74c3c' } },
+              { text: '、' },
+              { text: '黄色背景', style: { backgroundColor: '#f1c40f' } },
+              { text: '、' },
+              { text: '宽字符间距', style: { letterSpacing: '2px' } },
+              { text: '、' },
+              { text: '高亮', style: { highlight: 'cyan' } },
+              { text: '、' },
+              { text: '上标', style: { verticalAlign: 'super', fontSize: '12px' } },
+              { text: '与' },
+              { text: '下标', style: { verticalAlign: 'sub', fontSize: '12px' } },
+              { text: '。还有' },
+              {
+                text: '超链接',
+                style: { color: '#1890ff' },
+                href: 'https://github.com/wxwzl/doc-stream-renderer',
+              },
+              { text: '。' },
+            ],
+          },
+          {
+            type: 'p',
+            content: '本段落设置了首行缩进、边框和背景色。',
+            style: {
+              textIndent: '2em',
+              borderLeft: '4px solid #1890ff',
+              padding: '10px',
+              backgroundColor: '#fafafa',
+              marginTop: '10px',
+              marginBottom: '10px',
+            },
+          },
+          {
+            type: 'h2',
+            content: '三、列表',
+            style: {
+              fontWeight: 'bold',
+              fontSize: '18px',
+              marginTop: '20px',
+              marginBottom: '10px',
+            },
+          },
+          {
+            type: 'ul',
+            content: {
+              items: ['无序列表项 A', '无序列表项 B'],
+              level: 0,
+            },
+          },
+          {
+            type: 'ul',
+            content: {
+              items: ['二级无序项 C', '二级无序项 D'],
+              level: 1,
+            },
+          },
+          {
+            type: 'ol',
+            content: {
+              items: ['一级有序项 1', '一级有序项 2'],
+              level: 0,
+            },
+          },
+          {
+            type: 'ol',
+            content: {
+              items: ['二级有序项 2.1'],
+              level: 1,
+            },
+          },
+          {
+            type: 'ol',
+            content: {
+              items: ['三级有序项 2.1.1'],
+              level: 2,
+            },
+          },
+          {
+            type: 'h2',
+            content: '四、表格',
+            style: {
+              fontWeight: 'bold',
+              fontSize: '18px',
+              marginTop: '20px',
+              marginBottom: '10px',
+            },
+          },
+          {
+            type: 'table',
+            content: {
+              rows: [
+                {
+                  cells: [
+                    {
+                      content: '功能',
+                      width: '30%',
+                      textAlign: 'center',
+                      verticalAlign: 'middle',
+                    },
+                    {
+                      content: '状态',
+                      width: '20%',
+                      textAlign: 'center',
+                      verticalAlign: 'middle',
+                    },
+                    {
+                      content: '说明',
+                      width: '50%',
+                      textAlign: 'center',
+                      verticalAlign: 'middle',
+                    },
+                  ],
+                },
+                {
+                  cells: [
+                    { content: '流式渲染', textAlign: 'left' },
+                    { content: '已完成', textAlign: 'center' },
+                    { content: '支持增量 DOM 更新' },
+                  ],
+                },
+                {
+                  cells: [
+                    { content: '自动滚动', textAlign: 'left' },
+                    { content: '已完成', textAlign: 'center' },
+                    { content: '智能跟随用户滚动' },
+                  ],
+                },
+              ],
+            },
+          },
+          {
+            type: 'h2',
+            content: '五、代码块',
+            style: {
+              fontWeight: 'bold',
+              fontSize: '18px',
+              marginTop: '20px',
+              marginBottom: '10px',
+            },
+          },
+          {
+            type: 'code',
+            content: {
+              code: 'const renderer = new DocStreamRenderer();\nrenderer.stream = jsonData;\n// 自动增量更新 + 滚动',
+              language: 'typescript',
+            },
+          },
+          {
+            type: 'h2',
+            content: '六、引用块',
+            style: {
+              fontWeight: 'bold',
+              fontSize: '18px',
+              marginTop: '20px',
+              marginBottom: '10px',
+            },
+          },
+          {
+            type: 'quote',
+            content:
+              '增量更新的核心价值在于：即使在数据不完整的情况下，也能提供稳定、可预期的预览体验。',
+            style: {
+              marginTop: '10px',
+              marginBottom: '10px',
+            },
+          },
+          {
+            type: 'h2',
+            content: '七、图片',
+            style: {
+              fontWeight: 'bold',
+              fontSize: '18px',
+              marginTop: '20px',
+              marginBottom: '10px',
+            },
+          },
+          {
+            type: 'image',
+            content: {
+              src: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+              width: 100,
+              height: 100,
+              wrap: 'square',
+            },
+          },
+          { type: 'divider' },
+          { type: 'pageBreak' },
+          {
+            type: 'p',
+            content: '以上展示了 doc-stream-renderer 支持的全部主要特性。',
+            style: {
+              textAlign: 'center',
+              marginTop: '20px',
+              color: '#666',
+            },
+          },
+        ],
+      },
+      null,
+      2
+    ),
+  },
+  autoScroll: {
+    name: '自动滚动演示',
+    desc: '长文流式生成，体验自动滚动效果',
+    data: JSON.stringify(
+      {
+        globalStyle: {
+          fontSize: '14px',
+          lineHeight: '1.8',
+          fontFamily: 'Microsoft YaHei, sans-serif',
+        },
+        blocks: [
+          {
+            type: 'h1',
+            content: '大语言模型技术演进与产业应用',
+            style: {
+              textAlign: 'center',
+              fontWeight: 'bold',
+              fontSize: '24px',
+              marginBottom: '20px',
+            },
+          },
+          {
+            type: 'h2',
+            content: '第一章 人工智能的起源',
+            style: {
+              fontWeight: 'bold',
+              fontSize: '18px',
+              marginTop: '20px',
+              marginBottom: '10px',
+            },
+          },
+          {
+            type: 'p',
+            content:
+              '人工智能的概念最早可以追溯到二十世纪五十年代。1956年，达特茅斯会议上，约翰·麦卡锡首次提出了"人工智能"这一术语，标志着人工智能作为一门独立学科的正式诞生。早期的研究者们怀揣着巨大的热情，期望通过符号推理和逻辑运算来构建具有人类智能水平的机器系统。',
+          },
+          {
+            type: 'p',
+            content:
+              '然而，受限于当时的计算能力和数据规模，第一代人工智能系统很快遇到了瓶颈。专家系统虽然在特定领域取得了一定成功，但其知识获取困难、维护成本高昂等问题始终无法得到有效解决。这导致了人工智能研究的第一次寒冬，许多项目被迫中止，资金投入大幅削减。',
+          },
+          {
+            type: 'h2',
+            content: '第二章 机器学习的崛起',
+            style: {
+              fontWeight: 'bold',
+              fontSize: '18px',
+              marginTop: '20px',
+              marginBottom: '10px',
+            },
+          },
+          {
+            type: 'p',
+            content:
+              '二十世纪九十年代，机器学习开始逐渐成为人工智能研究的主流方向。与符号主义不同，机器学习强调让计算机从数据中自动学习规律，而不是依赖人工编写的规则。支持向量机、随机森林、梯度提升树等算法的出现，使得机器学习在图像识别、语音识别和自然语言处理等领域取得了突破性进展。',
+          },
+          {
+            type: 'p',
+            content:
+              '随着互联网的普及，数据量呈爆炸式增长，为机器学习提供了前所未有的燃料。2006年，杰弗里·辛顿提出了深度置信网络，重新点燃了学术界对神经网络的热情。深度学习时代的到来，标志着人工智能进入了一个全新的发展阶段。',
+          },
+          {
+            type: 'h2',
+            content: '第三章 深度学习的突破',
+            style: {
+              fontWeight: 'bold',
+              fontSize: '18px',
+              marginTop: '20px',
+              marginBottom: '10px',
+            },
+          },
+          {
+            type: 'p',
+            content:
+              '2012年，AlexNet在ImageNet图像分类竞赛中以压倒性优势夺冠，将图像识别准确率提升了十几个百分点。这一事件被广泛认为是深度学习走向成熟的标志性时刻。卷积神经网络、循环神经网络、生成对抗网络等架构相继被提出，并在计算机视觉、语音合成、机器翻译等任务上不断刷新纪录。',
+          },
+          {
+            type: 'p',
+            content:
+              '深度学习之所以能够取得如此巨大的成功，关键在于它能够自动从原始数据中学习层次化的特征表示。底层网络学习边缘和纹理等低级特征，高层网络则组合这些低级特征形成更加抽象的概念。这种层次化的表示学习能力，使得深度模型能够处理越来越复杂的任务。',
+          },
+          {
+            type: 'h2',
+            content: '第四章 Transformer 架构革命',
+            style: {
+              fontWeight: 'bold',
+              fontSize: '18px',
+              marginTop: '20px',
+              marginBottom: '10px',
+            },
+          },
+          {
+            type: 'p',
+            content:
+              '2017年，Google 的研究团队发表了论文《Attention Is All You Need》，正式提出了 Transformer 架构。这一架构完全基于自注意力机制，摒弃了传统的循环和卷积结构，却实现了前所未有的并行计算效率和长距离依赖建模能力。Transformer 的出现彻底改变了自然语言处理领域的格局。',
+          },
+          {
+            type: 'p',
+            content:
+              '基于 Transformer，BERT 和 GPT 系列模型相继问世。BERT 采用双向编码器架构，在各类理解任务上表现卓越；GPT 则采用自回归解码器架构，展现出强大的文本生成能力。这两种技术路线相互竞争又彼此借鉴，共同推动着预训练语言模型向更大规模、更强能力的方向演进。',
+          },
+          {
+            type: 'h2',
+            content: '第五章 大模型的涌现能力',
+            style: {
+              fontWeight: 'bold',
+              fontSize: '18px',
+              marginTop: '20px',
+              marginBottom: '10px',
+            },
+          },
+          {
+            type: 'p',
+            content:
+              '当模型参数规模突破千亿级别时，研究人员观察到了一种令人惊奇的现象：涌现能力。这些能力并非通过针对性训练获得，而是随着模型规模的扩大自然出现的。例如，大模型能够在没有示例的情况下完成复杂的推理任务，能够理解隐喻和讽刺，甚至能够进行多步骤的数学运算。',
+          },
+          {
+            type: 'p',
+            content:
+              '涌现能力的发现极大地拓展了人们对人工智能潜力的认知。它表明，仅仅通过扩大模型规模和增加训练数据，就可能解锁全新的智能行为。这一发现催生了全球范围内的"大模型竞赛"，各大科技公司和研究机构纷纷投入巨资训练自己的基础模型。',
+          },
+          {
+            type: 'h2',
+            content: '第六章 提示工程与上下文学习',
+            style: {
+              fontWeight: 'bold',
+              fontSize: '18px',
+              marginTop: '20px',
+              marginBottom: '10px',
+            },
+          },
+          {
+            type: 'p',
+            content:
+              '大模型的一个核心特性是上下文学习，即模型能够根据输入的提示文本动态调整自己的行为，而无需修改模型参数。这一特性催生了提示工程这一新兴领域。通过精心设计的提示模板，用户可以让模型扮演特定角色、遵循特定格式，甚至完成多轮对话和复杂推理。',
+          },
+          {
+            type: 'p',
+            content:
+              '提示工程不仅是一门技术，更是一门艺术。研究人员发现，模型的输出质量对提示的措辞、结构、示例选择等因素极其敏感。思维链提示、少样本学习、角色设定等技术的提出，使得用户能够更有效地挖掘大模型的潜力，将其应用于越来越广泛的实际场景。',
+          },
+          {
+            type: 'h2',
+            content: '第七章 多模态大模型',
+            style: {
+              fontWeight: 'bold',
+              fontSize: '18px',
+              marginTop: '20px',
+              marginBottom: '10px',
+            },
+          },
+          {
+            type: 'p',
+            content:
+              '从文本到图像，从音频到视频，多模态大模型正在打破不同信息模态之间的壁垒。GPT-4V、Gemini、Claude 等模型已经能够同时理解文本和图像输入，进行跨模态推理和生成。这些模型不仅可以描述图片内容，还能分析图表数据、理解用户界面、甚至根据草图生成代码。',
+          },
+          {
+            type: 'p',
+            content:
+              '多模态能力的实现依赖于统一的表示空间。模型将不同模态的数据映射到同一个高维向量空间中，在这个空间里，文本、图像、音频等信息的语义关系可以直接进行比较和运算。这种统一表示为多模态推理、跨模态检索和生成式人工智能开辟了全新的可能性。',
+          },
+          {
+            type: 'h2',
+            content: '第八章 智能体与工具使用',
+            style: {
+              fontWeight: 'bold',
+              fontSize: '18px',
+              marginTop: '20px',
+              marginBottom: '10px',
+            },
+          },
+          {
+            type: 'p',
+            content:
+              '大模型不再仅仅是文本生成器，它们正在演变为能够使用工具、执行动作的智能体。通过函数调用机制，模型可以查询数据库、调用API、执行代码、浏览网页。这种能力使得大模型能够与外部世界进行交互，完成从信息检索到任务执行的完整闭环。',
+          },
+          {
+            type: 'p',
+            content:
+              '智能体架构通常包含规划、记忆、工具使用和自我反思等模块。模型首先将复杂任务分解为可执行的子步骤，然后依次调用相应的工具完成每个步骤，同时维护一个工作记忆来跟踪任务状态。这种架构使得大模型能够处理远超单次生成能力的复杂问题。',
+          },
+          {
+            type: 'h2',
+            content: '第九章 产业应用与落地实践',
+            style: {
+              fontWeight: 'bold',
+              fontSize: '18px',
+              marginTop: '20px',
+              marginBottom: '10px',
+            },
+          },
+          {
+            type: 'p',
+            content:
+              '大语言模型正在深刻改变各行各业的运作方式。在内容创作领域，模型可以辅助写作、翻译、摘要和编辑；在客户服务领域，智能客服能够处理越来越复杂的用户咨询；在软件开发领域，代码生成和自动化测试正在提升开发效率；在教育领域，个性化辅导和自适应学习系统正在改变知识传播的方式。',
+          },
+          {
+            type: 'p',
+            content:
+              '企业部署大模型时面临着成本、延迟、安全和隐私等多重挑战。模型蒸馏、量化、剪枝等压缩技术可以在保持性能的同时大幅降低推理成本。检索增强生成技术通过将外部知识库与模型结合，既提升了回答的准确性，又解决了模型知识时效性的问题。',
+          },
+          {
+            type: 'h2',
+            content: '第十章 未来展望与挑战',
+            style: {
+              fontWeight: 'bold',
+              fontSize: '18px',
+              marginTop: '20px',
+              marginBottom: '10px',
+            },
+          },
+          {
+            type: 'p',
+            content:
+              '展望未来，大语言模型将继续向更大规模、更高效率、更强能力的方向演进。但与此同时，我们也必须正视其带来的挑战。幻觉问题、偏见与歧视、版权争议、能源消耗、就业冲击等问题亟待解决。构建安全、可信、负责任的人工智能系统，需要技术创新与制度建设的双重努力。',
+          },
+          {
+            type: 'p',
+            content:
+              '通用人工智能仍然是遥远但令人向往的目标。当前的大模型虽然在特定任务上表现出色，但在常识推理、因果理解、长期规划等方面与人类智能仍有显著差距。未来的突破可能来自于新的架构设计、世界模型的构建、以及神经科学与认知科学的深度融合。人工智能的故事，才刚刚开始。',
+          },
+        ],
+      },
+      null,
+      2
+    ),
   },
 };

@@ -2,3 +2,5 @@ node_modules
 dist
 .playwright-mcp
 .claude
+_bmad
+_bmad-output

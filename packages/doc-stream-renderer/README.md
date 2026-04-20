@@ -86,19 +86,42 @@ function App() {
 
 ### `DocStreamRenderer` (React)
 
-| 属性名      | 类型                  | 必填 | 说明                                       |
-| ----------- | --------------------- | ---- | ------------------------------------------ |
-| `stream`    | `string`              | 是   | 流式 JSON 字符串，支持不完整 JSON 容错解析 |
-| `className` | `string`              | 否   | 外层容器的 CSS 类名                        |
-| `style`     | `React.CSSProperties` | 否   | 外层容器的内联样式                         |
+| 属性名           | 类型                  | 必填 | 说明                                          |
+| ---------------- | --------------------- | ---- | --------------------------------------------- |
+| `stream`         | `string`              | 是   | 流式 JSON 字符串，支持不完整 JSON 容错解析    |
+| `className`      | `string`              | 否   | 外层宿主容器的 CSS 类名                       |
+| `style`          | `React.CSSProperties` | 否   | 外层宿主容器的内联样式                        |
+| `containerStyle` | `React.CSSProperties` | 否   | Shadow DOM 内部容器的内联样式                 |
+| `autoScroll`     | `boolean`             | 否   | 新内容到来时是否自动滚动到底部（默认 `true`） |
 
 ### `DocStreamRenderer` (Vue 3)
 
-| 属性名           | 类型     | 必填 | 说明                                       |
-| ---------------- | -------- | ---- | ------------------------------------------ |
-| `stream`         | `string` | 是   | 流式 JSON 字符串，支持不完整 JSON 容错解析 |
-| `className`      | `string` | 否   | 外层容器的 CSS 类名                        |
-| `containerStyle` | `object` | 否   | 外层容器的内联样式对象                     |
+| 属性名           | 类型      | 必填 | 说明                                          |
+| ---------------- | --------- | ---- | --------------------------------------------- |
+| `stream`         | `string`  | 是   | 流式 JSON 字符串，支持不完整 JSON 容错解析    |
+| `className`      | `string`  | 否   | 外层宿主容器的 CSS 类名                       |
+| `rootStyle`      | `object`  | 否   | 外层宿主容器的内联样式对象                    |
+| `containerStyle` | `object`  | 否   | Shadow DOM 内部容器的内联样式对象             |
+| `autoScroll`     | `boolean` | 否   | 新内容到来时是否自动滚动到底部（默认 `true`） |
+
+---
+
+## 流式渲染优化
+
+`DocStreamRenderer` 针对 LLM 边生成边预览的场景做了以下优化：
+
+### 增量 DOM 更新
+
+组件内部会对比新旧 JSON 中的 blocks，仅在以下情况做最小化更新：
+
+- **纯追加场景**（最常见）：只将新增的 blocks `insertAdjacentHTML` 到 Shadow DOM 末尾，已有 DOM 节点完全不动，避免滚动跳动、选中文本丢失、图片重载闪烁。
+- **有修改或删除**：回退到全量替换。
+
+### 智能自动滚动
+
+- `autoScroll` 默认为 `true`，新内容到来时自动滚到底部。
+- 用户一旦向上滚动查看历史内容，自动暂停跟随；用户再次滚回底部附近后恢复自动跟随。
+- 使用 50px 阈值 + 150ms 防抖，避免误触发。
 
 ---
 

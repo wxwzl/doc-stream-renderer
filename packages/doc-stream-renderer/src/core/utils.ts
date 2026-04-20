@@ -37,8 +37,9 @@ export function isArray<T>(value: unknown): value is T[] {
 export const DEFAULT_FONT_SIZE_PX = 16;
 export const DEFAULT_FONT_SIZE_PT = DEFAULT_FONT_SIZE_PX * 0.75; // 12pt
 
-export function escapeHtml(text: string): string {
-  return text
+export function escapeHtml(text: unknown): string {
+  const str = isString(text) ? text : text == null ? '' : String(text);
+  return str
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')

@@ -24,24 +24,23 @@ export default function App() {
     }
   };
 
-  const startCharStreaming = (fullText: string) => {
+  const startCharStreaming = (fullText: string, durationMs = 8000, fixedDelay?: number) => {
     stopStreaming();
     setStream('');
     setIsStreaming(true);
 
     let index = 0;
-    streamingIntervalRef.current = setInterval(
-      () => {
-        if (index < fullText.length) {
-          const nextIndex = index + 1;
-          setStream(fullText.slice(0, nextIndex));
-          index = nextIndex;
-        } else {
-          stopStreaming();
-        }
-      },
-      Math.max(2, Math.floor(1500 / fullText.length))
-    ); // 总时长约 1.5s，最少 2ms/字
+    const delay = fixedDelay ?? Math.max(5, Math.floor(durationMs / fullText.length));
+
+    streamingIntervalRef.current = setInterval(() => {
+      if (index < fullText.length) {
+        const nextIndex = index + 1;
+        setStream(fullText.slice(0, nextIndex));
+        index = nextIndex;
+      } else {
+        stopStreaming();
+      }
+    }, delay);
   };
 
   const updateUrl = (key: string) => {
@@ -61,7 +60,12 @@ export default function App() {
     }
 
     if (key === 'streaming') {
-      startCharStreaming(examples.rich.data);
+      startCharStreaming(examples.streaming.data, 8000);
+      return;
+    }
+
+    if (key === 'autoScroll') {
+      startCharStreaming(examples.autoScroll.data, 20000, 4);
       return;
     }
 
@@ -158,7 +162,15 @@ export default function App() {
                   boxSizing: 'border-box',
                 }}
               >
-                <DocStreamRenderer stream={stream} />
+                <DocStreamRenderer
+                  stream={stream}
+                  autoScroll
+                  style={
+                    activeKey === 'autoScroll'
+                      ? { maxHeight: '600px', overflow: 'auto', border: '1px solid #eee' }
+                      : undefined
+                  }
+                />
               </div>
             </div>
           </section>
