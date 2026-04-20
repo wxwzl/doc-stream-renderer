@@ -1022,8 +1022,204 @@ export const examples = {
           },
           {
             type: 'p',
+            content: '以下对比展示：默认不设置缩进 vs 显式设置缩进',
+            style: {
+              marginTop: '20px',
+              marginBottom: '10px',
+              fontWeight: 'bold',
+            },
+          },
+          {
+            type: 'ol',
+            content: {
+              items: ['默认无缩进 - 一级'],
+              level: 0,
+            },
+          },
+          {
+            type: 'ol',
+            content: {
+              items: ['默认无缩进 - 二级'],
+              level: 1,
+            },
+          },
+          {
+            type: 'ol',
+            content: {
+              items: ['默认无缩进 - 三级'],
+              level: 2,
+            },
+          },
+          {
+            type: 'ol',
+            content: {
+              items: ['显式缩进 - 一级'],
+              level: 0,
+              indent: '24px',
+            },
+          },
+          {
+            type: 'ol',
+            content: {
+              items: ['显式缩进 - 二级'],
+              level: 1,
+              indent: '48px',
+            },
+          },
+          {
+            type: 'ol',
+            content: {
+              items: ['显式缩进 - 三级'],
+              level: 2,
+              indent: '72px',
+            },
+          },
+          {
+            type: 'p',
             content:
-              '在 Word 文档和 HTML 预览中，各级编号会正确显示为 1. / 1.1. / 1.1.1. 样式。同时支持通过 content.indent 自定义缩进距离。',
+              '在 Word 文档和 HTML 预览中，各级编号会正确显示为 1. / 1.1. / 1.1.1. 样式。默认情况下列表不设置缩进，如需缩进可通过 content.indent 自定义。',
+            style: {
+              marginTop: '10px',
+              color: '#666',
+            },
+          },
+        ],
+      },
+      null,
+      2
+    ),
+  },
+  unorderedList: {
+    name: '多级无序列表',
+    desc: '展示各级圆点层级与富文本列表项',
+    data: JSON.stringify(
+      {
+        globalStyle: {
+          fontSize: '14px',
+          lineHeight: '1.8',
+          fontFamily: 'Microsoft YaHei, sans-serif',
+        },
+        blocks: [
+          {
+            type: 'h1',
+            content: '多级无序列表演示',
+            style: {
+              textAlign: 'center',
+              fontWeight: 'bold',
+              fontSize: '22px',
+              marginBottom: '20px',
+            },
+          },
+          {
+            type: 'p',
+            content: '以下展示了各级无序列表的默认渲染效果：',
+          },
+          {
+            type: 'ul',
+            content: {
+              items: ['一级无序列表项 A', '一级无序列表项 B'],
+              level: 0,
+            },
+          },
+          {
+            type: 'ul',
+            content: {
+              items: ['二级无序列表项 C', '二级无序列表项 D'],
+              level: 1,
+            },
+          },
+          {
+            type: 'ul',
+            content: {
+              items: ['三级无序列表项 E'],
+              level: 2,
+            },
+          },
+          {
+            type: 'p',
+            content: '以下展示富文本列表项：',
+            style: {
+              marginTop: '20px',
+              marginBottom: '10px',
+              fontWeight: 'bold',
+            },
+          },
+          {
+            type: 'ul',
+            content: {
+              items: [
+                [{ text: '加粗文本', style: { fontWeight: 'bold' } }, { text: '与普通文本混合' }],
+                [{ text: '带颜色的', style: { color: '#e74c3c' } }, { text: '列表项' }],
+                [
+                  { text: '包含' },
+                  {
+                    text: '超链接',
+                    style: { color: '#1890ff' },
+                    href: 'https://github.com/wxwzl/doc-stream-renderer',
+                  },
+                ],
+              ],
+              level: 0,
+            },
+          },
+          {
+            type: 'p',
+            content: '以下对比展示：默认不设置缩进 vs 显式设置缩进',
+            style: {
+              marginTop: '20px',
+              marginBottom: '10px',
+              fontWeight: 'bold',
+            },
+          },
+          {
+            type: 'ul',
+            content: {
+              items: ['默认无缩进 - 一级'],
+              level: 0,
+            },
+          },
+          {
+            type: 'ul',
+            content: {
+              items: ['默认无缩进 - 二级'],
+              level: 1,
+            },
+          },
+          {
+            type: 'ul',
+            content: {
+              items: ['默认无缩进 - 三级'],
+              level: 2,
+            },
+          },
+          {
+            type: 'ul',
+            content: {
+              items: ['显式缩进 - 一级'],
+              level: 0,
+              indent: '24px',
+            },
+          },
+          {
+            type: 'ul',
+            content: {
+              items: ['显式缩进 - 二级'],
+              level: 1,
+              indent: '48px',
+            },
+          },
+          {
+            type: 'ul',
+            content: {
+              items: ['显式缩进 - 三级'],
+              level: 2,
+              indent: '72px',
+            },
+          },
+          {
+            type: 'p',
+            content:
+              '在 Word 文档和 HTML 预览中，各级无序列表会正确显示圆点样式。默认情况下列表不设置缩进，如需缩进可通过 content.indent 自定义。',
             style: {
               marginTop: '10px',
               color: '#666',
@@ -1152,7 +1348,20 @@ export const examples = {
           {
             type: 'ul',
             content: {
-              items: ['无序列表项 A', '无序列表项 B'],
+              items: [
+                '无序列表项 A',
+                [
+                  { text: '富文本列表项', style: { fontWeight: 'bold' } },
+                  { text: '支持加粗、' },
+                  { text: '斜体', style: { fontStyle: 'italic' } },
+                  { text: '和' },
+                  {
+                    text: '链接',
+                    style: { color: '#1890ff' },
+                    href: 'https://github.com/wxwzl/doc-stream-renderer',
+                  },
+                ],
+              ],
               level: 0,
             },
           },

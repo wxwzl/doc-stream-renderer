@@ -153,22 +153,29 @@ function renderListHtml(block: Block, globalStyle: GlobalStyle, olCounters: numb
   const listObj = isObject<ListContent>(content) && 'items' in content ? content : { items: [] };
   const items = listObj.items || [];
   const level = Math.max(0, Math.min(10, listObj.level || 0));
-  const indent = listObj.indent || block.style?.paddingLeft || `${24 + level * 24}px`;
+  const indent = listObj.indent || block.style?.paddingLeft;
   const itemsHtml = items
-    .map((i: string) => {
+    .map(i => {
       if (type === 'ol') {
         olCounters.length = level + 1;
         for (let j = 0; j <= level; j++) {
           if (olCounters[j] === undefined) olCounters[j] = 0;
         }
         olCounters[level] = (olCounters[level] || 0) + 1;
-        const prefix = olCounters.slice(0, level + 1).join('.') + '. ';
-        return `<li style="list-style:none;">${prefix}${escapeHtml(i)}</li>`;
+        const prefix =
+          olCounters
+            .slice(0, level + 1)
+            .map(c => c || 1)
+            .join('.') + '. ';
+        return `<li style="list-style:none;margin:0;padding:0;">${prefix}${buildContentHtml(i)}</li>`;
       }
-      return `<li>${escapeHtml(i)}</li>`;
+      return `<li style="margin:0;padding:0;">${buildContentHtml(i)}</li>`;
     })
     .join('');
-  return `<${type} style="margin:0;${styleStr};padding-left:${indent};">${itemsHtml}</${type}>`;
+  const listBaseStyle = indent
+    ? `padding-left:${indent};`
+    : 'padding-left:0;margin-left:0;list-style-position:inside;';
+  return `<${type} style="margin:0;${styleStr};${listBaseStyle}">${itemsHtml}</${type}>`;
 }
 
 function renderTableBlockHtml(block: Block, globalStyle: GlobalStyle): string {

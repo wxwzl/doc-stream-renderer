@@ -309,13 +309,17 @@ function renderListDocx(block: Block, globalStyle: GlobalStyle): BlockRenderResu
   const listIndentTwips = listIndentStr ? twipsFromSize(listIndentStr) : 0;
   const indent = listIndentTwips
     ? { left: listIndentTwips, hanging: Math.round(listIndentTwips / 2) }
-    : ctx.indent;
+    : { left: 0, hanging: 0 };
   return items.map(
-    (text: string) =>
+    item =>
       new docx.Paragraph({
-        children: createTextRuns(text || '', globalStyle, style),
-        bullet: type === 'ul' ? { level } : undefined,
-        numbering: type === 'ol' ? { reference: 'main-num', level } : undefined,
+        children: createTextRuns(item || '', globalStyle, style),
+        numbering:
+          type === 'ol'
+            ? { reference: 'main-num', level }
+            : type === 'ul'
+              ? { reference: 'main-bullet', level }
+              : undefined,
         alignment: ctx.alignment,
         spacing: ctx.spacing,
         shading: ctx.shading,
@@ -609,20 +613,37 @@ export async function generateDocxBlob(jsonStr: string): Promise<Blob> {
                 format: 'decimal',
                 text: `${parts.join('.')}.`,
                 alignment: docx.AlignmentType.START,
+                suffix: docx.LevelSuffix.SPACE,
                 style: {
+                  paragraph: {
+                    indent: { left: 0, hanging: 0 },
+                  },
                   run: {
                     size: listRunSize,
                     font: listRunFont,
                   },
                 },
-                paragraphProperties: {
-                  indent: {
-                    left: 720 * (i + 1),
-                    hanging: 360,
-                  },
-                },
               };
             }),
+          },
+          {
+            reference: 'main-bullet',
+            levels: Array.from({ length: 10 }).map((_, i) => ({
+              level: i,
+              format: 'bullet',
+              text: '\u2022',
+              alignment: docx.AlignmentType.START,
+              suffix: docx.LevelSuffix.SPACE,
+              style: {
+                paragraph: {
+                  indent: { left: 0, hanging: 0 },
+                },
+                run: {
+                  size: listRunSize,
+                  font: listRunFont,
+                },
+              },
+            })),
           },
         ],
       },

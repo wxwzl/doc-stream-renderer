@@ -88,7 +88,7 @@ export interface CodeContent {
 }
 
 export interface ListContent {
-  items?: string[];
+  items?: (string | InlineItem[])[];
   level?: number;
   indent?: string;
 }
