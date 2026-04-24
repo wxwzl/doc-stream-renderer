@@ -1,6 +1,6 @@
 {
   "name": "doc-stream-renderer",
-  "version": "1.0.15",
+  "version": "1.0.16",
   "description": "A streaming Word document preview component for React and Vue 3",
   "author": "wxwzl",
   "license": "MIT",
@@ -33,7 +33,7 @@
   "scripts": {
     "prepublish": "pnpm run build",
     "dev": "vite",
-    "build": "vite build && cp README.md ../../README.md",
+    "build": "vite build && cp ../../README.md README.md ",
     "preview": "vite preview",
     "test": "vitest run"
   },

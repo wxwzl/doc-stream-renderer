@@ -1745,4 +1745,147 @@ export const examples = {
       2
     ),
   },
+  externalScroll: {
+    name: '外部滚动容器',
+    desc: 'scrollContainer 示例：组件 100% 高度 + 外部滚动',
+    data: JSON.stringify(
+      {
+        globalStyle: {
+          fontSize: '14px',
+          lineHeight: '1.8',
+          fontFamily: 'Microsoft YaHei, sans-serif',
+        },
+        blocks: [
+          {
+            type: 'h1',
+            content: '外部滚动容器演示',
+            style: {
+              textAlign: 'center',
+              fontWeight: 'bold',
+              fontSize: '24px',
+              marginBottom: '20px',
+            },
+          },
+          {
+            type: 'p',
+            content:
+              '本示例展示了 scrollContainer 的用法：DocStreamRenderer 组件自身高度为 100%，不设置固定高度，也不产生滚动条。滚动行为由外层容器接管，组件通过 scrollContainer prop 感知外部容器的滚动状态，实现智能自动滚动。',
+          },
+          {
+            type: 'h2',
+            content: '第一章 设计思路',
+            style: {
+              fontWeight: 'bold',
+              fontSize: '18px',
+              marginTop: '20px',
+              marginBottom: '10px',
+            },
+          },
+          {
+            type: 'p',
+            content:
+              '在实际业务中，文档预览区域往往只是页面的一部分。整个页面或某个面板负责滚动，而预览组件需要适配父容器的高度。如果组件自身也产生滚动，就会出现嵌套滚动条，体验极差。',
+          },
+          {
+            type: 'p',
+            content:
+              '通过 scrollContainer，你可以把任意 HTMLElement 指定为滚动容器。组件会在这个容器上监听 scroll 事件，判断用户是否手动上滑，并决定是否执行自动滚动到底部。',
+          },
+          {
+            type: 'h2',
+            content: '第二章 使用方法',
+            style: {
+              fontWeight: 'bold',
+              fontSize: '18px',
+              marginTop: '20px',
+              marginBottom: '10px',
+            },
+          },
+          {
+            type: 'ol',
+            content: {
+              items: [
+                '在外部准备一个固定高度的容器，并设置 overflow: auto',
+                '将容器元素通过 ref 获取后传给 DocStreamRenderer 的 scrollContainer prop',
+                '将 DocStreamRenderer 的样式设为 height: 100%',
+                '启用 autoScroll，组件会自动在外部容器上滚动到底部',
+              ],
+            },
+          },
+          {
+            type: 'h2',
+            content: '第三章 长文本填充',
+            style: {
+              fontWeight: 'bold',
+              fontSize: '18px',
+              marginTop: '20px',
+              marginBottom: '10px',
+            },
+          },
+          {
+            type: 'p',
+            content:
+              '以下为填充内容，用于验证外部容器滚动和自动滚动的效果。当内容超出容器高度时，外部容器会出现滚动条。在流式生成过程中，如果你保持在底部附近，页面会自动跟随滚动；如果你主动向上滚动查看历史内容，自动滚动会暂停，直到你再次回到底部。',
+          },
+          {
+            type: 'p',
+            content:
+              '人工智能（Artificial Intelligence，AI）亦称智械、机器智能，指由人制造出来的机器所表现出来的智能。通常人工智能是指通过普通计算机程序来呈现人类智能的技术。通过医学、神经科学、机器人学及统计学等的进步，有些预测则认为人类的无数职业也逐渐被人工智能取代。',
+          },
+          {
+            type: 'p',
+            content:
+              '人工智能的定义可以分为两部分，即“人工”和“智能”。“人工”比较好理解，争议性也不大。有时我们会要考虑什么是人力所能及制造的，或者人自身的智能程度有没有高到可以创造人工智能的地步，等等。但总的来说，“人工系统”就是通常意义下的人工系统。',
+          },
+          {
+            type: 'p',
+            content:
+              '关于什么是“智能”，就问题多多了。这涉及到其它诸如意识（CONSCIOUSNESS）、自我（SELF）、思维（MIND）（包括无意识的思维（UNCONSCIOUS_MIND））等等问题。人唯一了解的智能是人本身的智能，这是普遍认同的观点。',
+          },
+          {
+            type: 'p',
+            content:
+              '但是我们对我们自身智能的理解都非常有限，对构成人的智能的必要元素也了解有限，所以就很难定义什么是“人工”制造的“智能”了。因此人工智能的研究往往涉及对人的智能本身的研究。其它关于动物或其它人造系统的智能也普遍被认为是人工智能相关的研究课题。',
+          },
+          {
+            type: 'p',
+            content:
+              '人工智能在计算机领域内，得到了愈加广泛的重视。并在机器人，经济政治决策，控制系统，仿真系统中得到应用。尼尔逊教授对人工智能下了这样一个定义：“人工智能是关于知识的学科――怎样表示知识以及怎样获得知识并使用知识的科学。”',
+          },
+          {
+            type: 'p',
+            content:
+              '而另一个美国麻省理工学院的温斯顿教授认为：“人工智能就是研究如何使计算机去做过去只有人才能做的智能工作。”这些说法反映了人工智能学科的基本思想和基本内容。即人工智能是研究人类智能活动的规律，构造具有一定智能的人工系统，研究如何让计算机去完成以往需要人的智力才能胜任的工作。',
+          },
+          {
+            type: 'p',
+            content:
+              '也就是研究如何应用计算机的软硬件来模拟人类某些智能行为的基本理论、方法和技术。人工智能是计算机学科的一个分支，二十世纪七十年代以来被称为世界三大尖端技术之一（空间技术、能源技术、人工智能）。',
+          },
+          {
+            type: 'p',
+            content:
+              '也被认为是二十一世纪三大尖端技术（基因工程、纳米科学、人工智能）之一。这是因为近三十年来它获得了迅速的发展，在很多学科领域都获得了广泛应用，并取得了丰硕的成果，人工智能已逐步成为一个独立的分支，无论在理论和实践上都已自成一个系统。',
+          },
+          {
+            type: 'h2',
+            content: '第四章 总结',
+            style: {
+              fontWeight: 'bold',
+              fontSize: '18px',
+              marginTop: '20px',
+              marginBottom: '10px',
+            },
+          },
+          {
+            type: 'p',
+            content:
+              '通过外部滚动容器，DocStreamRenderer 可以灵活嵌入到各种布局中，不再受限于组件自身的尺寸。无论是聊天窗口、侧边栏预览还是全屏编辑器，都能获得一致的流式渲染和自动滚动体验。',
+          },
+        ],
+      },
+      null,
+      2
+    ),
+  },
 };

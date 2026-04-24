@@ -86,23 +86,25 @@ function App() {
 
 ### `DocStreamRenderer` (React)
 
-| 属性名           | 类型                  | 必填 | 说明                                          |
-| ---------------- | --------------------- | ---- | --------------------------------------------- |
-| `stream`         | `string`              | 是   | 流式 JSON 字符串，支持不完整 JSON 容错解析    |
-| `className`      | `string`              | 否   | 外层宿主容器的 CSS 类名                       |
-| `style`          | `React.CSSProperties` | 否   | 外层宿主容器的内联样式                        |
-| `containerStyle` | `React.CSSProperties` | 否   | Shadow DOM 内部容器的内联样式                 |
-| `autoScroll`     | `boolean`             | 否   | 新内容到来时是否自动滚动到底部（默认 `true`） |
+| 属性名            | 类型                  | 必填 | 说明                                          |
+| ----------------- | --------------------- | ---- | --------------------------------------------- |
+| `stream`          | `string`              | 是   | 流式 JSON 字符串，支持不完整 JSON 容错解析    |
+| `className`       | `string`              | 否   | 外层宿主容器的 CSS 类名                       |
+| `style`           | `React.CSSProperties` | 否   | 外层宿主容器的内联样式                        |
+| `containerStyle`  | `React.CSSProperties` | 否   | Shadow DOM 内部容器的内联样式                 |
+| `autoScroll`      | `boolean`             | 否   | 新内容到来时是否自动滚动到底部（默认 `true`） |
+| `scrollContainer` | `HTMLElement \| null` | 否   | 外部滚动容器，用于嵌套场景下的自动滚动定位    |
 
 ### `DocStreamRenderer` (Vue 3)
 
-| 属性名           | 类型      | 必填 | 说明                                          |
-| ---------------- | --------- | ---- | --------------------------------------------- |
-| `stream`         | `string`  | 是   | 流式 JSON 字符串，支持不完整 JSON 容错解析    |
-| `className`      | `string`  | 否   | 外层宿主容器的 CSS 类名                       |
-| `rootStyle`      | `object`  | 否   | 外层宿主容器的内联样式对象                    |
-| `containerStyle` | `object`  | 否   | Shadow DOM 内部容器的内联样式对象             |
-| `autoScroll`     | `boolean` | 否   | 新内容到来时是否自动滚动到底部（默认 `true`） |
+| 属性名            | 类型                               | 必填 | 说明                                          |
+| ----------------- | ---------------------------------- | ---- | --------------------------------------------- |
+| `stream`          | `string`                           | 是   | 流式 JSON 字符串，支持不完整 JSON 容错解析    |
+| `className`       | `string`                           | 否   | 外层宿主容器的 CSS 类名                       |
+| `rootStyle`       | `object`                           | 否   | 外层宿主容器的内联样式对象                    |
+| `containerStyle`  | `object`                           | 否   | Shadow DOM 内部容器的内联样式对象             |
+| `autoScroll`      | `boolean`                          | 否   | 新内容到来时是否自动滚动到底部（默认 `true`） |
+| `scrollContainer` | `HTMLElement \| null \| undefined` | 否   | 外部滚动容器，用于嵌套场景下的自动滚动定位    |
 
 ---
 
@@ -122,6 +124,7 @@ function App() {
 - `autoScroll` 默认为 `true`，新内容到来时自动滚到底部。
 - 用户一旦向上滚动查看历史内容，自动暂停跟随；用户再次滚回底部附近后恢复自动跟随。
 - 使用 50px 阈值 + 150ms 防抖，避免误触发。
+- 当组件嵌套在外部滚动区域（如自定义布局、弹窗、分栏面板）时，可通过 `scrollContainer` 传入外部容器的 DOM 节点，让自动滚动与滚动监听作用于该外部容器，而非组件自身。
 
 ---
 

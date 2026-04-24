@@ -10,6 +10,7 @@ export const DocStreamRenderer = defineComponent({
     rootStyle: { type: Object, default: () => ({}) },
     containerStyle: { type: Object, default: () => ({}) },
     autoScroll: { type: Boolean, default: true },
+    scrollContainer: { type: Object as () => HTMLElement | null | undefined, default: null },
   },
   setup(props) {
     const hostRef = ref<HTMLDivElement | null>(null);
@@ -42,17 +43,19 @@ export const DocStreamRenderer = defineComponent({
       return containerRef.value;
     };
 
+    const getScrollTarget = () => props.scrollContainer ?? hostRef.value;
+
     const isNearBottom = () => {
-      const host = hostRef.value;
-      if (!host) return true;
+      const target = getScrollTarget();
+      if (!target) return true;
       const threshold = 50;
-      return host.scrollHeight - host.scrollTop - host.clientHeight < threshold;
+      return target.scrollHeight - target.scrollTop - target.clientHeight < threshold;
     };
 
     const scrollToBottom = () => {
-      const host = hostRef.value;
-      if (!host) return;
-      host.scrollTop = host.scrollHeight;
+      const target = getScrollTarget();
+      if (!target) return;
+      target.scrollTop = target.scrollHeight;
     };
 
     const handleScroll = () => {
@@ -114,19 +117,29 @@ export const DocStreamRenderer = defineComponent({
       });
     };
 
+    const bindScrollTarget = () => {
+      const target = getScrollTarget();
+      if (target && props.autoScroll) {
+        target.addEventListener('scroll', handleScroll);
+      }
+      return target;
+    };
+
+    const unbindScrollTarget = (target: HTMLElement | null | undefined) => {
+      if (target) {
+        target.removeEventListener('scroll', handleScroll);
+      }
+    };
+
+    let currentScrollTarget: HTMLElement | null | undefined = null;
+
     onMounted(() => {
       updateShadow();
-      const host = hostRef.value;
-      if (host && props.autoScroll) {
-        host.addEventListener('scroll', handleScroll);
-      }
+      currentScrollTarget = bindScrollTarget();
     });
 
     onUnmounted(() => {
-      const host = hostRef.value;
-      if (host) {
-        host.removeEventListener('scroll', handleScroll);
-      }
+      unbindScrollTarget(currentScrollTarget);
       if (scrollTimeout) {
         clearTimeout(scrollTimeout);
       }
@@ -136,6 +149,14 @@ export const DocStreamRenderer = defineComponent({
     });
 
     watch(() => props.stream, updateShadow);
+
+    watch(
+      () => props.scrollContainer,
+      () => {
+        unbindScrollTarget(currentScrollTarget);
+        currentScrollTarget = bindScrollTarget();
+      }
+    );
 
     return () =>
       h('div', {

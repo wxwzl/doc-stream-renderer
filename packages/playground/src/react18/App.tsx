@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useCallback } from 'react';
 import { DocStreamRenderer, generateDocxBlob } from 'doc-stream-renderer/react';
 import { examples } from '../examples';
 
@@ -13,8 +13,15 @@ export default function App() {
   const [stream, setStream] = useState(examples[initialKey as keyof typeof examples].data);
   const [isStreaming, setIsStreaming] = useState(false);
   const [activeKey, setActiveKey] = useState<string>(initialKey);
+  const [scrollContainer, setScrollContainer] = useState<HTMLElement | null>(null);
 
   const streamingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const scrollContainerRef = useRef<HTMLElement | null>(null);
+
+  const handleScrollContainerRef = useCallback((el: HTMLElement | null) => {
+    scrollContainerRef.current = el;
+    setScrollContainer(el);
+  }, []);
 
   const stopStreaming = () => {
     if (streamingIntervalRef.current) {
@@ -66,6 +73,11 @@ export default function App() {
 
     if (key === 'autoScroll') {
       startCharStreaming(examples.autoScroll.data, 20000, 4);
+      return;
+    }
+
+    if (key === 'externalScroll') {
+      startCharStreaming(examples.externalScroll.data, 20000, 4);
       return;
     }
 
@@ -145,33 +157,56 @@ export default function App() {
           <section className="demo-section">
             <h2>预览效果 (使用 DocStreamRenderer 组件)</h2>
             <div
+              ref={activeKey === 'externalScroll' ? handleScrollContainerRef : undefined}
               style={{
                 width: '100%',
                 background: '#f5f5f5',
                 padding: '40px 0',
+                ...(activeKey === 'externalScroll' ? { height: '400px', overflow: 'auto' } : {}),
               }}
             >
-              <div
-                style={{
-                  width: '794px',
-                  margin: '0 auto',
-                  padding: '72px',
-                  background: '#fff',
-                  minHeight: '1123px',
-                  boxShadow: '0 0 10px rgba(0,0,0,0.1)',
-                  boxSizing: 'border-box',
-                }}
-              >
-                <DocStreamRenderer
-                  stream={stream}
-                  autoScroll
-                  style={
-                    activeKey === 'autoScroll'
-                      ? { maxHeight: '600px', overflow: 'auto', border: '1px solid #eee' }
-                      : undefined
-                  }
-                />
-              </div>
+              {activeKey === 'externalScroll' ? (
+                <div
+                  style={{
+                    width: '794px',
+                    margin: '0 auto',
+                    background: '#fff',
+                    border: '1px solid #ddd',
+                    boxShadow: '0 0 10px rgba(0,0,0,0.1)',
+                    boxSizing: 'border-box',
+                    padding: '24px',
+                  }}
+                >
+                  <DocStreamRenderer
+                    stream={stream}
+                    autoScroll
+                    scrollContainer={scrollContainer}
+                    style={{ height: '100%' }}
+                  />
+                </div>
+              ) : (
+                <div
+                  style={{
+                    width: '794px',
+                    margin: '0 auto',
+                    padding: '72px',
+                    background: '#fff',
+                    minHeight: '1123px',
+                    boxShadow: '0 0 10px rgba(0,0,0,0.1)',
+                    boxSizing: 'border-box',
+                  }}
+                >
+                  <DocStreamRenderer
+                    stream={stream}
+                    autoScroll
+                    style={
+                      activeKey === 'autoScroll'
+                        ? { maxHeight: '600px', overflow: 'auto', border: '1px solid #eee' }
+                        : undefined
+                    }
+                  />
+                </div>
+              )}
             </div>
           </section>
         </div>

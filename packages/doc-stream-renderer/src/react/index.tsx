@@ -8,6 +8,7 @@ export interface DocStreamRendererProps {
   style?: React.CSSProperties;
   containerStyle?: React.CSSProperties;
   autoScroll?: boolean;
+  scrollContainer?: HTMLElement | null;
 }
 
 export const DocStreamRenderer: React.FC<DocStreamRendererProps> = ({
@@ -16,6 +17,7 @@ export const DocStreamRenderer: React.FC<DocStreamRendererProps> = ({
   style,
   containerStyle,
   autoScroll = true,
+  scrollContainer,
 }) => {
   const hostRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -46,23 +48,25 @@ export const DocStreamRenderer: React.FC<DocStreamRendererProps> = ({
     return containerRef.current;
   }, [containerStyle]);
 
+  const getScrollTarget = useCallback(() => scrollContainer ?? hostRef.current, [scrollContainer]);
+
   const isNearBottom = useCallback(() => {
-    const host = hostRef.current;
-    if (!host) return true;
+    const target = getScrollTarget();
+    if (!target) return true;
     const threshold = 50;
-    return host.scrollHeight - host.scrollTop - host.clientHeight < threshold;
-  }, []);
+    return target.scrollHeight - target.scrollTop - target.clientHeight < threshold;
+  }, [getScrollTarget]);
 
   const scrollToBottom = useCallback(() => {
-    const host = hostRef.current;
-    if (!host) return;
-    host.scrollTop = host.scrollHeight;
-  }, []);
+    const target = getScrollTarget();
+    if (!target) return;
+    target.scrollTop = target.scrollHeight;
+  }, [getScrollTarget]);
 
   // 监听用户滚动
   useEffect(() => {
-    const host = hostRef.current;
-    if (!host || !autoScroll) return;
+    const target = getScrollTarget();
+    if (!target || !autoScroll) return;
 
     const handleScroll = () => {
       isUserScrollingRef.current = !isNearBottom();
@@ -74,14 +78,14 @@ export const DocStreamRenderer: React.FC<DocStreamRendererProps> = ({
       }, 150);
     };
 
-    host.addEventListener('scroll', handleScroll);
+    target.addEventListener('scroll', handleScroll);
     return () => {
-      host.removeEventListener('scroll', handleScroll);
+      target.removeEventListener('scroll', handleScroll);
       if (scrollTimeoutRef.current) {
         clearTimeout(scrollTimeoutRef.current);
       }
     };
-  }, [autoScroll, isNearBottom]);
+  }, [autoScroll, isNearBottom, getScrollTarget]);
 
   // 增量更新
   useEffect(() => {
@@ -143,7 +147,7 @@ export const DocStreamRenderer: React.FC<DocStreamRendererProps> = ({
         cancelAnimationFrame(rafRef.current);
       }
     };
-  }, [stream, autoScroll, containerStyle, getContainer, scrollToBottom]);
+  }, [stream, autoScroll, containerStyle, getContainer, scrollToBottom, getScrollTarget]);
 
   return <div ref={hostRef} className={className} style={{ width: '100%', ...style }} />;
 };

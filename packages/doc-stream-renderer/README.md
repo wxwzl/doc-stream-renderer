@@ -86,23 +86,25 @@ function App() {
 
 ### `DocStreamRenderer` (React)
 
-| 属性名           | 类型                  | 必填 | 说明                                          |
-| ---------------- | --------------------- | ---- | --------------------------------------------- |
-| `stream`         | `string`              | 是   | 流式 JSON 字符串，支持不完整 JSON 容错解析    |
-| `className`      | `string`              | 否   | 外层宿主容器的 CSS 类名                       |
-| `style`          | `React.CSSProperties` | 否   | 外层宿主容器的内联样式                        |
-| `containerStyle` | `React.CSSProperties` | 否   | Shadow DOM 内部容器的内联样式                 |
-| `autoScroll`     | `boolean`             | 否   | 新内容到来时是否自动滚动到底部（默认 `true`） |
+| 属性名            | 类型                  | 必填 | 说明                                          |
+| ----------------- | --------------------- | ---- | --------------------------------------------- |
+| `stream`          | `string`              | 是   | 流式 JSON 字符串，支持不完整 JSON 容错解析    |
+| `className`       | `string`              | 否   | 外层宿主容器的 CSS 类名                       |
+| `style`           | `React.CSSProperties` | 否   | 外层宿主容器的内联样式                        |
+| `containerStyle`  | `React.CSSProperties` | 否   | Shadow DOM 内部容器的内联样式                 |
+| `autoScroll`      | `boolean`             | 否   | 新内容到来时是否自动滚动到底部（默认 `true`） |
+| `scrollContainer` | `HTMLElement \| null` | 否   | 外部滚动容器，用于嵌套场景下的自动滚动定位    |
 
 ### `DocStreamRenderer` (Vue 3)
 
-| 属性名           | 类型      | 必填 | 说明                                          |
-| ---------------- | --------- | ---- | --------------------------------------------- |
-| `stream`         | `string`  | 是   | 流式 JSON 字符串，支持不完整 JSON 容错解析    |
-| `className`      | `string`  | 否   | 外层宿主容器的 CSS 类名                       |
-| `rootStyle`      | `object`  | 否   | 外层宿主容器的内联样式对象                    |
-| `containerStyle` | `object`  | 否   | Shadow DOM 内部容器的内联样式对象             |
-| `autoScroll`     | `boolean` | 否   | 新内容到来时是否自动滚动到底部（默认 `true`） |
+| 属性名            | 类型                               | 必填 | 说明                                          |
+| ----------------- | ---------------------------------- | ---- | --------------------------------------------- |
+| `stream`          | `string`                           | 是   | 流式 JSON 字符串，支持不完整 JSON 容错解析    |
+| `className`       | `string`                           | 否   | 外层宿主容器的 CSS 类名                       |
+| `rootStyle`       | `object`                           | 否   | 外层宿主容器的内联样式对象                    |
+| `containerStyle`  | `object`                           | 否   | Shadow DOM 内部容器的内联样式对象             |
+| `autoScroll`      | `boolean`                          | 否   | 新内容到来时是否自动滚动到底部（默认 `true`） |
+| `scrollContainer` | `HTMLElement \| null \| undefined` | 否   | 外部滚动容器，用于嵌套场景下的自动滚动定位    |
 
 ---
 
@@ -122,6 +124,7 @@ function App() {
 - `autoScroll` 默认为 `true`，新内容到来时自动滚到底部。
 - 用户一旦向上滚动查看历史内容，自动暂停跟随；用户再次滚回底部附近后恢复自动跟随。
 - 使用 50px 阈值 + 150ms 防抖，避免误触发。
+- 当组件嵌套在外部滚动区域（如自定义布局、弹窗、分栏面板）时，可通过 `scrollContainer` 传入外部容器的 DOM 节点，让自动滚动与滚动监听作用于该外部容器，而非组件自身。
 
 ---
 
@@ -237,7 +240,7 @@ interface CodeContent {
 }
 
 interface ListContent {
-  items?: string[];
+  items?: (string | InlineItem[])[];
   level?: number;
   indent?: string;
 }
@@ -384,7 +387,7 @@ const CodeContentSchema = z.object({
 });
 
 const ListContentSchema = z.object({
-  items: z.array(z.string()).optional(),
+  items: z.array(z.union([z.string(), z.array(InlineItemSchema)])).optional(),
   level: z.number().optional(),
   indent: z.string().optional(),
 });
@@ -472,8 +475,8 @@ const ParsedDataSchema = z.object({
 | ---------------------- | --------------- | ------------ | ---------------------------------------------------------------------------------------------- |
 | `h1` ~ `h6`            | `<h1>` ~ `<h6>` | 标题级别 1~6 | `string` / `InlineItem[]`                                                                      |
 | `p` / `paragraph`      | `<p>`           | 普通段落     | `string` / `InlineItem[]`                                                                      |
-| `ul`                   | `<ul>`          | 项目符号列表 | `{ items: string[], level?: number, indent?: string }`                                         |
-| `ol`                   | `<ol>`          | 编号列表     | `{ items: string[], level?: number, indent?: string }`                                         |
+| `ul`                   | `<ul>`          | 项目符号列表 | `{ items: (string \| InlineItem[])[], level?: number, indent?: string }`                       |
+| `ol`                   | `<ol>`          | 编号列表     | `{ items: (string \| InlineItem[])[], level?: number, indent?: string }`                       |
 | `table`                | `<table>`       | 表格         | `{ rows: [{ cells: [{ content, colSpan?, rowSpan?, width?, textAlign?, verticalAlign? }] }] }` |
 | `image` / `img`        | `<img>`         | 图片         | `{ src: string, width?: number, height?: number, wrap?: string }`                              |
 | `quote` / `blockquote` | `<blockquote>`  | 左侧缩进段落 | `string` / `InlineItem[]`                                                                      |
@@ -561,14 +564,24 @@ const ParsedDataSchema = z.object({
     {
       "type": "ul",
       "content": {
-        "items": ["项目 A", "项目 B"],
+        "items": [
+          "项目 A",
+          [{ "text": "富文本项", "style": { "fontWeight": "bold" } }, { "text": " 支持加粗和颜色" }]
+        ],
         "level": 0
       }
     },
     {
       "type": "ol",
       "content": {
-        "items": ["步骤 1", "步骤 2", "步骤 3"],
+        "items": ["步骤 1", "步骤 2"],
+        "level": 0
+      }
+    },
+    {
+      "type": "ol",
+      "content": {
+        "items": ["子步骤 1.1"],
         "level": 1
       }
     },
@@ -590,45 +603,53 @@ const ParsedDataSchema = z.object({
 
 ### 字段说明
 
-| 字段                                                                        | 说明                                                                                          |
-| --------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| `globalStyle.fontSize`                                                      | 全局默认字号，作用于所有未单独设置字号的块                                                    |
-| `globalStyle.lineHeight`                                                    | 全局行高，作用于所有块                                                                        |
-| `globalStyle.fontFamily`                                                    | 全局字体，作用于所有块                                                                        |
-| `page.size`                                                                 | 页面尺寸：`A4` / `Letter` / 自定义 `{ width, height }`                                        |
-| `page.orientation`                                                          | 页面方向：`portrait`（纵向）/ `landscape`（横向）                                             |
-| `page.margin`                                                               | 页面边距，支持 `top` / `right` / `bottom` / `left`                                            |
-| `meta.title`                                                                | 文档标题（DOCX 属性）                                                                         |
-| `meta.creator`                                                              | 文档作者（DOCX 属性）                                                                         |
-| `meta.description`                                                          | 文档描述（DOCX 属性）                                                                         |
-| `meta.subject`                                                              | 文档主题（DOCX 属性）                                                                         |
-| `block.type`                                                                | 块的类型，决定渲染方式。支持标题、段落、列表、表格、图片、代码块、分页符等                    |
-| `block.content`                                                             | 块的内容。类型不同，格式不同：纯字符串、富文本数组、列表项、表格结构、图片对象、代码对象等    |
-| `block.style.textAlign`                                                     | 对齐方式：`left` / `center` / `right`                                                         |
-| `block.style.fontWeight`                                                    | 字重，如 `bold`                                                                               |
-| `block.style.fontSize`                                                      | 块级字号，覆盖全局字号                                                                        |
-| `block.style.lineHeight`                                                    | 块级行高，覆盖全局行高                                                                        |
-| `block.style.fontFamily`                                                    | 块级字体，覆盖全局字体                                                                        |
-| `block.style.color`                                                         | 块级文字颜色                                                                                  |
-| `block.style.backgroundColor`                                               | 块级背景色                                                                                    |
-| `block.style.marginTop` / `marginBottom`                                    | 块级上下边距                                                                                  |
-| `block.style.marginLeft` / `marginRight`                                    | 块级左右边距                                                                                  |
-| `block.style.padding`                                                       | 块级统一内边距                                                                                |
-| `block.style.paddingTop` / `paddingBottom` / `paddingLeft` / `paddingRight` | 块级分项内边距                                                                                |
-| `block.style.textIndent`                                                    | 首行缩进，如 `2em`                                                                            |
-| `block.style.borderTop` / `borderBottom` / `borderLeft` / `borderRight`     | 段落四边边框，格式同 CSS `border`（如 `1px solid #ccc`）                                      |
-| `inline.style.textDecoration`                                               | 文字装饰：`underline` / `line-through`                                                        |
-| `inline.style.backgroundColor`                                              | 文字背景色                                                                                    |
-| `inline.style.verticalAlign`                                                | 垂直对齐：`super`（上标）/ `sub`（下标）                                                      |
-| `inline.style.letterSpacing`                                                | 字符间距，如 `1px` / `0.5pt`                                                                  |
-| `inline.style.highlight`                                                    | 文字高亮颜色（DOCX 高亮），如 `yellow` / `green` / `cyan` / `red` / `blue`                    |
-| `inline.href`                                                               | 超链接地址，设置后该 InlineItem 渲染为可点击链接                                              |
-| `tableCell.width`                                                           | 单元格宽度，支持百分比字符串或数字（twips）                                                   |
-| `tableCell.textAlign`                                                       | 单元格文字水平对齐                                                                            |
-| `tableCell.verticalAlign`                                                   | 单元格文字垂直对齐：`top` / `middle` / `bottom`                                               |
-| `listContent.level`                                                         | 列表嵌套层级，支持 `0` ~ `9`                                                                  |
-| `listContent.indent`                                                        | 列表自定义缩进，如 `48px`，优先于 `block.style.paddingLeft`                                   |
-| `imageContent.wrap`                                                         | 图片环绕方式：`inline` / `square` / `tight` / `topAndBottom` / `behindText` / `inFrontOfText` |
+| 字段                                                                        | 说明                                                                                               |
+| --------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `globalStyle.fontSize`                                                      | 全局默认字号，作用于所有未单独设置字号的块                                                         |
+| `globalStyle.lineHeight`                                                    | 全局行高，作用于所有块                                                                             |
+| `globalStyle.fontFamily`                                                    | 全局字体，作用于所有块                                                                             |
+| `page.size`                                                                 | 页面尺寸：`A4` / `Letter` / 自定义 `{ width, height }`                                             |
+| `page.orientation`                                                          | 页面方向：`portrait`（纵向）/ `landscape`（横向）                                                  |
+| `page.margin`                                                               | 页面边距，支持 `top` / `right` / `bottom` / `left`                                                 |
+| `meta.title`                                                                | 文档标题（DOCX 属性）                                                                              |
+| `meta.creator`                                                              | 文档作者（DOCX 属性）                                                                              |
+| `meta.description`                                                          | 文档描述（DOCX 属性）                                                                              |
+| `meta.subject`                                                              | 文档主题（DOCX 属性）                                                                              |
+| `block.type`                                                                | 块的类型，决定渲染方式。支持标题、段落、列表、表格、图片、代码块、分页符等                         |
+| `block.content`                                                             | 块的内容。类型不同，格式不同：纯字符串、富文本数组、列表项、表格结构、图片对象、代码对象等         |
+| `block.style.textAlign`                                                     | 对齐方式：`left` / `center` / `right`                                                              |
+| `block.style.fontWeight`                                                    | 字重，如 `bold`                                                                                    |
+| `block.style.fontSize`                                                      | 块级字号，覆盖全局字号                                                                             |
+| `block.style.lineHeight`                                                    | 块级行高，覆盖全局行高                                                                             |
+| `block.style.fontFamily`                                                    | 块级字体，覆盖全局字体                                                                             |
+| `block.style.color`                                                         | 块级文字颜色                                                                                       |
+| `block.style.backgroundColor`                                               | 块级背景色                                                                                         |
+| `block.style.marginTop` / `marginBottom`                                    | 块级上下边距                                                                                       |
+| `block.style.marginLeft` / `marginRight`                                    | 块级左右边距                                                                                       |
+| `block.style.padding`                                                       | 块级统一内边距                                                                                     |
+| `block.style.paddingTop` / `paddingBottom` / `paddingLeft` / `paddingRight` | 块级分项内边距                                                                                     |
+| `block.style.textIndent`                                                    | 首行缩进，如 `2em`                                                                                 |
+| `block.style.borderTop` / `borderBottom` / `borderLeft` / `borderRight`     | 段落四边边框，格式同 CSS `border`（如 `1px solid #ccc`）                                           |
+| `inline.style.textDecoration`                                               | 文字装饰：`underline` / `line-through`                                                             |
+| `inline.style.backgroundColor`                                              | 文字背景色                                                                                         |
+| `inline.style.verticalAlign`                                                | 垂直对齐：`super`（上标）/ `sub`（下标）                                                           |
+| `inline.style.letterSpacing`                                                | 字符间距，如 `1px` / `0.5pt`                                                                       |
+| `inline.style.highlight`                                                    | 文字高亮颜色（DOCX 高亮），如 `yellow` / `green` / `cyan` / `red` / `blue`                         |
+| `inline.href`                                                               | 超链接地址，设置后该 InlineItem 渲染为可点击链接                                                   |
+| `tableCell.width`                                                           | 单元格宽度，支持百分比字符串或数字（twips）                                                        |
+| `tableCell.textAlign`                                                       | 单元格文字水平对齐                                                                                 |
+| `tableCell.verticalAlign`                                                   | 单元格文字垂直对齐：`top` / `middle` / `bottom`                                                    |
+| `listContent.level`                                                         | 列表嵌套层级，支持 `0` ~ `9`                                                                       |
+| `listContent.indent`                                                        | 列表自定义缩进，如 `48px`，优先于 `block.style.paddingLeft`。默认不设置缩进，HTML 和 DOCX 均无缩进 |
+| `listContent.items`                                                         | 列表项，每项可以是纯字符串或富文本数组 `InlineItem[]`                                              |
+| `imageContent.wrap`                                                         | 图片环绕方式：`inline` / `square` / `tight` / `topAndBottom` / `behindText` / `inFrontOfText`      |
+
+### 列表说明
+
+- **`items`**：列表项支持纯字符串或富文本数组 `InlineItem[]`，可以对列表中的文字单独设置加粗、颜色、链接等样式。
+- **默认缩进**：不设置 `indent` 时，HTML 和 DOCX 默认均无缩进，列表符号/编号紧贴左侧边界。
+- **有序列表多级编号**：`ol` 的 `level` 控制多级编号，如 `level: 0` 显示 `1.`，`level: 1` 显示 `1.1.`，`level: 2` 显示 `1.1.1.`。跳过的层级会自动补 `1`，不会出现 `0`。
+- **无序列表**：`ul` 使用圆点符号，各级别均显示 `•`。
 
 ---
 

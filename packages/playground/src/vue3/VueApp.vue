@@ -51,8 +51,34 @@
 
         <section class="demo-section">
           <h2>预览效果 (使用 DocStreamRenderer 组件)</h2>
-          <div style="width: 100%; background: #f5f5f5; padding: 40px 0">
+          <div
+            :ref="activeKey === 'externalScroll' ? scrollContainerRef : null"
+            :style="[
+              { width: '100%', background: '#f5f5f5', padding: '40px 0' },
+              activeKey === 'externalScroll' ? { height: '400px', overflow: 'auto' } : {},
+            ]"
+          >
             <div
+              v-if="activeKey === 'externalScroll'"
+              style="
+                width: 794px;
+                margin: 0 auto;
+                background: #fff;
+                border: 1px solid #ddd;
+                box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+                box-sizing: border-box;
+                padding: 24px;
+              "
+            >
+              <DocStreamRenderer
+                :stream="stream"
+                auto-scroll
+                :scroll-container="scrollContainerRef"
+                :style="{ height: '100%' }"
+              />
+            </div>
+            <div
+              v-else
               style="
                 width: 794px;
                 margin: 0 auto;
@@ -95,6 +121,7 @@
   const stream = ref(examples[initialKey as keyof typeof examples].data);
   const isStreaming = ref(false);
   const activeKey = ref(initialKey);
+  const scrollContainerRef = ref<HTMLElement | null>(null);
   let streamingInterval: ReturnType<typeof setInterval> | null = null;
 
   const stopStreaming = () => {
@@ -146,6 +173,11 @@
 
     if (key === 'autoScroll') {
       startCharStreaming(examples.autoScroll.data, 20000, 4);
+      return;
+    }
+
+    if (key === 'externalScroll') {
+      startCharStreaming(examples.externalScroll.data, 20000, 4);
       return;
     }
 
