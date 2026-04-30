@@ -103,6 +103,21 @@ export default function App() {
       <header className="header">
         <h1>Doc Stream Renderer</h1>
         <p>流式 Word 文档预览组件演示</p>
+        <nav className="header-nav">
+          <a href="./index.html">首页</a>
+          <a href="./react.html" className="active">
+            React 演示
+          </a>
+          <a href="./vue.html">Vue 3 演示</a>
+          <a
+            href="https://github.com/wxwzl/doc-stream-renderer"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="external"
+          >
+            GitHub 仓库
+          </a>
+        </nav>
       </header>
 
       <main className="container main-layout">

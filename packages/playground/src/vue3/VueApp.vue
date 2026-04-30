@@ -3,6 +3,19 @@
     <header class="header">
       <h1>Doc Stream Renderer</h1>
       <p>流式 Word 文档预览组件 - Vue 3 演示</p>
+      <nav class="header-nav">
+        <a href="./index.html">首页</a>
+        <a href="./react.html">React 演示</a>
+        <a href="./vue.html" class="active">Vue 3 演示</a>
+        <a
+          href="https://github.com/wxwzl/doc-stream-renderer"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="external"
+        >
+          GitHub 仓库
+        </a>
+      </nav>
     </header>
 
     <main class="container main-layout">
@@ -52,7 +65,7 @@
         <section class="demo-section">
           <h2>预览效果 (使用 DocStreamRenderer 组件)</h2>
           <div
-            :ref="activeKey === 'externalScroll' ? scrollContainerRef : null"
+            ref="scrollContainerRef"
             :style="[
               { width: '100%', background: '#f5f5f5', padding: '40px 0' },
               activeKey === 'externalScroll' ? { height: '400px', overflow: 'auto' } : {},
