@@ -1269,7 +1269,7 @@ export const examples = {
           },
           {
             type: 'h2',
-            content: '一、标题层级',
+            content: '二、标题层级',
             style: {
               fontWeight: 'bold',
               fontSize: '18px',
