@@ -5,7 +5,7 @@ import { examples } from '../examples';
 const getInitialKey = () => {
   const params = new URLSearchParams(window.location.search);
   const key = params.get('example');
-  return key && key in examples ? key : 'basic';
+  return key && key in examples ? key : 'fullFeatures';
 };
 
 export default function App() {
